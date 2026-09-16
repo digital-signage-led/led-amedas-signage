@@ -1,5 +1,5 @@
-import { formatWindMs } from "../services/amedas.js";
-import { missingBox, stationCaption, timesBlock } from "./shared-ui.js";
+import { formatWindMs, windDirectionInfo } from "../services/amedas.js";
+import { missText, obsTable, stationCaption, stationRows, tableCell, timesBlock } from "./shared-ui.js";
 
 function arrowSvg(deg) {
   return `
@@ -10,13 +10,19 @@ function arrowSvg(deg) {
   `;
 }
 
+function dirCell(obs) {
+  const wind = windDirectionInfo(obs.windDirection);
+  if (wind.calm) return "静穏";
+  return wind.label || missText();
+}
+
 export function renderWind(ctx, data) {
   const settings = ctx.contentSettings || {};
   const selected = data.selected;
   const obs = selected.obs;
   const wind = selected.wind;
   const speed = formatWindMs(obs.wind);
-  const unit = settings.showUnit === false ? "" : "<small>m/s</small>";
+  const unit = settings.showUnit === false ? "" : "m/s";
   const dirText = wind.calm ? "静穏" : wind.label;
   const phrase = wind.calm ? "風はほとんどありません" : (dirText ? `${dirText}の風` : null);
 
@@ -25,7 +31,7 @@ export function renderWind(ctx, data) {
     ${stationCaption(selected.station, settings.showStationName)}
     <div class="wind-grid">
       <div class="wind-dir" style="transform:translate(var(--dir-x), var(--dir-y))">
-        ${dirText == null ? missingBox("風向") : `
+        ${dirText == null ? `<div class="obs-missing"><span>風向</span><strong>観測データなし</strong></div>` : `
           <div class="wind-dir-name">${dirText}</div>
           <div class="wind-dir-phrase">${phrase}</div>
           ${wind.calm || wind.toDeg == null ? "" : `
@@ -35,10 +41,17 @@ export function renderWind(ctx, data) {
         `}
       </div>
       <div class="wind-speed" style="transform:translate(var(--speed-x), var(--speed-y))">
-        ${speed == null ? missingBox("風速") : `<div class="obs-value is-wind">${speed}${unit}</div>`}
+        ${speed == null ? `<div class="obs-missing"><span>風速</span><strong>観測データなし</strong></div>` : `<div class="obs-value is-wind">${speed}${unit ? `<small>${unit}</small>` : ""}</div>`}
         <div class="obs-value-label">風速</div>
       </div>
     </div>
+    ${obsTable(
+      ["地点", "風向", `風速${unit ? `（${unit}）` : ""}`],
+      stationRows(data, (row) => [
+        dirCell(row.obs),
+        tableCell(row.obs.wind, formatWindMs)
+      ])
+    )}
     ${timesBlock({
       dataUpdatedAt: data.reportAt,
       displayUpdatedAt: data.fetchedAt,

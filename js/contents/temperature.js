@@ -1,20 +1,23 @@
 import { formatTemp } from "../services/amedas.js";
-import { missingBox, stationCaption, timesBlock } from "./shared-ui.js";
+import { obsTable, stationCaption, stationRows, tableCell, timesBlock } from "./shared-ui.js";
 
 export function renderTemperature(ctx, data) {
   const settings = ctx.contentSettings || {};
   const selected = data.selected;
   const obs = selected.obs;
   const value = formatTemp(obs.temp);
-  const unit = settings.showUnit === false ? "" : "<small>℃</small>";
+  const unit = settings.showUnit === false ? "" : "℃";
 
   ctx.els.panel.innerHTML = `
     <div class="panel-kicker">アメダス気温</div>
     ${stationCaption(selected.station, settings.showStationName)}
     <div class="obs-main" style="transform:translate(var(--value-x), var(--value-y))">
-      ${value == null ? missingBox("気温") : `<div class="obs-value is-temp">${value}${unit}</div>`}
+      ${value == null ? `<div class="obs-missing"><span>気温</span><strong>観測データなし</strong></div>` : `<div class="obs-value is-temp">${value}${unit ? `<small>${unit}</small>` : ""}</div>`}
     </div>
-    <div class="obs-note">遠距離から読み取れるよう、観測値のみを大きく表示しています。</div>
+    ${obsTable(
+      ["地点", `気温${unit ? `（${unit}）` : ""}`],
+      stationRows(data, (row) => [tableCell(row.obs.temp, formatTemp)])
+    )}
     ${timesBlock({
       dataUpdatedAt: data.reportAt,
       displayUpdatedAt: data.fetchedAt,

@@ -176,10 +176,10 @@ html.is-boot #boot-status { display: flex; }
   font-weight: 700;
 }
 
-.obs-main { min-height: 180px; }
+.obs-main { min-height: 0; }
 
 .obs-value {
-  font-size: calc(128px * var(--number-scale, 1));
+  font-size: calc(84px * var(--number-scale, 1));
   font-weight: 900;
   line-height: 0.95;
   letter-spacing: -0.04em;
@@ -199,6 +199,63 @@ html.is-boot #boot-status { display: flex; }
   font-size: calc(20px * var(--font-scale, 1));
   color: #c5d7f2;
   font-weight: 700;
+}
+
+.section-label {
+  font-size: calc(18px * var(--font-scale, 1));
+  color: #9fb6d8;
+  font-weight: 800;
+}
+
+.obs-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.obs-table th,
+.obs-table td {
+  padding: 7px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--panel-line);
+  font-size: calc(22px * var(--font-scale, 1));
+  font-weight: 800;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obs-table thead th {
+  color: #8aa0c2;
+  font-size: calc(16px * var(--font-scale, 1));
+  font-weight: 800;
+}
+
+.obs-table tbody th {
+  color: #d7e7ff;
+  font-weight: 900;
+}
+
+.obs-table td {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.obs-table .is-miss {
+  color: #ffd166;
+  font-size: 0.82em;
+}
+
+.obs-table small {
+  font-size: 0.7em;
+  color: #c5d7f2;
+}
+
+.obs-table tr.is-selected th,
+.obs-table tr.is-selected td {
+  background: rgba(31, 111, 235, 0.28);
+  color: #fff;
 }
 
 .obs-subs {
@@ -251,9 +308,9 @@ html.is-boot #boot-status { display: flex; }
 }
 
 .wind-arrow-wrap {
-  width: calc(148px * var(--arrow-scale, 1));
-  height: calc(148px * var(--arrow-scale, 1));
-  margin: 10px 0 6px;
+  width: calc(88px * var(--arrow-scale, 1));
+  height: calc(88px * var(--arrow-scale, 1));
+  margin: 6px 0 4px;
   color: #7ecbff;
 }
 
@@ -265,7 +322,7 @@ html.is-boot #boot-status { display: flex; }
 }
 
 .wind-speed .obs-value {
-  font-size: calc(96px * var(--speed-scale, 1) * var(--number-scale, 1));
+  font-size: calc(64px * var(--speed-scale, 1) * var(--number-scale, 1));
 }
 
 .time-grid {

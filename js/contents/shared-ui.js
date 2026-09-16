@@ -44,6 +44,40 @@ export function stationCaption(point, showName) {
   return `<div class="obs-station">${point.name}<small>アメダス ${point.id}</small></div>`;
 }
 
+export function missText() {
+  return `<span class="is-miss">観測データなし</span>`;
+}
+
+export function tableCell(value, format, unit = "") {
+  if (value == null) return missText();
+  const text = format ? format(value) : String(value);
+  return `${text}${unit}`;
+}
+
+export function obsTable(headers, rows) {
+  return `
+    <table class="obs-table">
+      <thead>
+        <tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr>
+      </thead>
+      <tbody>
+        ${rows.map((row) => `
+          <tr class="${row.selected ? "is-selected" : ""}">
+            ${row.cells.map((cell, i) => `<t${i === 0 ? "h" : "d"} scope="${i === 0 ? "row" : "col"}">${cell}</t${i === 0 ? "h" : "d"}>`).join("")}
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+export function stationRows(data, pickCells) {
+  return (data.stations || []).slice(0, 10).map((row) => ({
+    selected: !!row.selected,
+    cells: [row.station.name, ...pickCells(row)]
+  }));
+}
+
 export function mapLabelFor(contentId, obs, wind) {
   if (contentId === "amedas_temp") {
     return obs.temp == null ? "—" : `${Number(obs.temp).toFixed(1)}`;

@@ -1,40 +1,33 @@
 import { formatMm } from "../services/amedas.js";
-import { missingBox, stationCaption, timesBlock } from "./shared-ui.js";
-
-function row(label, value, unitOn) {
-  if (value == null) {
-    return `<div class="obs-sub"><span>${label}</span><strong>観測データなし</strong></div>`;
-  }
-  return `<div class="obs-sub"><span>${label}</span><strong>${formatMm(value)}${unitOn ? "<small>mm</small>" : ""}</strong></div>`;
-}
+import { obsTable, stationCaption, stationRows, tableCell, timesBlock } from "./shared-ui.js";
 
 export function renderPrecipitation(ctx, data) {
   const settings = ctx.contentSettings || {};
   const selected = data.selected;
   const obs = selected.obs;
-  const primary = obs.precipitation1h ?? obs.precipitation10m;
-  const unit = settings.showUnit === false ? "" : "<small>mm</small>";
-  const hasAny = [
-    obs.precipitation10m,
-    obs.precipitation1h,
-    obs.precipitation3h,
-    obs.precipitation24h
-  ].some((v) => v != null);
+  const unit = settings.showUnit === false ? "" : "mm";
+  const unitCell = (value) => tableCell(value, formatMm, unit ? ` <small>${unit}</small>` : "");
 
   ctx.els.panel.innerHTML = `
     <div class="panel-kicker">アメダス降水量</div>
     ${stationCaption(selected.station, settings.showStationName)}
-    <div class="obs-main" style="transform:translate(var(--value-x), var(--value-y))">
-      ${primary == null ? missingBox("降水量") : `<div class="obs-value is-rain">${formatMm(primary)}${unit}</div>`}
-      ${primary != null ? `<div class="obs-value-label">${obs.precipitation1h != null ? "1時間降水量" : "10分降水量"}</div>` : ""}
-    </div>
-    <div class="obs-subs">
-      ${row("10分", obs.precipitation10m, settings.showUnit !== false)}
-      ${row("1時間", obs.precipitation1h, settings.showUnit !== false)}
-      ${row("3時間", obs.precipitation3h, settings.showUnit !== false)}
-      ${row("24時間", obs.precipitation24h, settings.showUnit !== false)}
-    </div>
-    ${!hasAny ? `<div class="obs-note">この地点の降水量は現在取得できません。</div>` : ""}
+    ${obsTable(
+      ["期間", `降水量${unit ? `（${unit}）` : ""}`],
+      [
+        { selected: false, cells: ["10分", unitCell(obs.precipitation10m)] },
+        { selected: false, cells: ["1時間", unitCell(obs.precipitation1h)] },
+        { selected: false, cells: ["3時間", unitCell(obs.precipitation3h)] },
+        { selected: false, cells: ["24時間", unitCell(obs.precipitation24h)] }
+      ]
+    )}
+    <div class="section-label">県内の観測地点</div>
+    ${obsTable(
+      ["地点", "10分", "1時間"],
+      stationRows(data, (row) => [
+        tableCell(row.obs.precipitation10m, formatMm),
+        tableCell(row.obs.precipitation1h, formatMm)
+      ])
+    )}
     ${timesBlock({
       dataUpdatedAt: data.reportAt,
       displayUpdatedAt: data.fetchedAt,

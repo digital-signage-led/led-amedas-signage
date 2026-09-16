@@ -160,7 +160,7 @@ export async function mountSignage(root, options = {}) {
     map = null;
   }
 
-  const nearby = nearbyPoints(prefecture.slug, point, content.id, 18);
+  const nearby = nearbyPoints(prefecture.slug, point, content.id, 10);
 
   async function refresh() {
     let data;
