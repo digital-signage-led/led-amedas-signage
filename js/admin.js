@@ -1,6 +1,6 @@
 import { CONTENTS } from "./data/contents.js";
 import { comboKey, defaultPoint, pointsForPrefecture } from "./data/observation-points.js";
-import { PREFECTURES, regionOf } from "./data/prefectures.js";
+import { PREFECTURES } from "./data/prefectures.js";
 import { mountSignage } from "./signage-view.js";
 import {
   allCombos,
@@ -19,7 +19,7 @@ const $ = (id) => document.getElementById(id);
 
 const state = {
   store: null,
-  prefecture: "tokyo",
+  prefecture: "toyama",
   content: "amedas_temp",
   preview: null
 };
@@ -162,6 +162,12 @@ function applyLivePreview() {
 
 async function renderPreview() {
   const host = $("preview-host");
+  if (state.preview) {
+    state.preview.destroy();
+    if (state.preview.map) {
+      try { state.preview.map.destroy(); } catch { /* ignore */ }
+    }
+  }
   host.innerHTML = "";
   const wrap = document.createElement("div");
   wrap.className = "preview-scale";
@@ -175,14 +181,9 @@ async function renderPreview() {
       content: state.store.contents[state.content],
       pointId: currentPointId()
     },
-    fit: true
+    fit: true,
+    fitHost: host
   });
-}
-
-function fillRegion() {
-  const region = regionOf(state.prefecture);
-  const pref = PREFECTURES.find((p) => p.slug === state.prefecture);
-  $("region-view").innerHTML = `<option>${region.name} ／ ${pref?.name || ""}</option>`;
 }
 
 function fillPoints() {
@@ -233,7 +234,6 @@ function bind() {
   fillSelect($("pref-select"), PREFECTURES, (p) => p.slug, (p) => p.name, state.prefecture);
   fillSelect($("content-select"), CONTENTS, (c) => c.id, (c) => c.name, state.content);
   fillSelect($("url-content"), [{ id: "", name: "すべてのコンテンツ" }, ...CONTENTS], (c) => c.id, (c) => c.name, "");
-  fillRegion();
   fillPoints();
   syncCommonInputs();
   syncContentInputs();
@@ -241,7 +241,6 @@ function bind() {
 
   $("pref-select").addEventListener("change", () => {
     state.prefecture = $("pref-select").value;
-    fillRegion();
     fillPoints();
     statusLabel();
     renderPreview();

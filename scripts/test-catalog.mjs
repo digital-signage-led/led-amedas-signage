@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { CONTENTS, canonicalContent } from "../js/data/contents.js";
 import { AMEDAS_STATIONS, AMEDAS_STATION_META } from "../js/data/amedas-stations.js";
 import { defaultPoint, pointsForPrefecture } from "../js/data/observation-points.js";
-import { PREFECTURES, canonicalPrefecture, prefectureFromAmedasId, regionOf } from "../js/data/prefectures.js";
+import { PREFECTURES, canonicalPrefecture, getPrefecture, prefectureFromAmedasId, regionOf } from "../js/data/prefectures.js";
 import { windDirectionInfo } from "../js/services/amedas.js";
 
 assert.equal(PREFECTURES.length, 47);
@@ -35,6 +35,9 @@ assert.equal(tokyo.id, "44132");
 assert.equal(tokyo.name, "東京");
 assert.equal(defaultPoint("osaka").id, "62078");
 assert.equal(defaultPoint("aichi").id, "51106");
+assert.equal(getPrefecture("hokkaido").defaultZoom, 6.5);
+assert.equal(getPrefecture("toyama").defaultZoom, 9.4);
+assert.equal(getPrefecture("toyama").zoomBoost, 0.9);
 
 assert.equal(windDirectionInfo(0).label, "静穏");
 assert.equal(windDirectionInfo(0).calm, true);

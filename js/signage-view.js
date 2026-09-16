@@ -9,7 +9,7 @@ import { createMap, MAP_ATTRIBUTION } from "./map/map-engine.js";
 import { fetchAmedasBundle, windDirectionInfo } from "./services/amedas.js";
 import { formatStamp, nextAmedasRefreshDelay } from "./services/jma-common.js";
 import { settingsForSignage } from "./store.js";
-import { applyDesignTokens, designSize, fitFixedScreen } from "./viewport.js";
+import { applyDesignTokens, designSize, fitFixedScreen, measureVisibleBox, FIXED_DESIGN } from "./viewport.js";
 
 const RENDERERS = {
   amedas_temp: renderTemperature,
@@ -130,7 +130,19 @@ export async function mountSignage(root, options = {}) {
   `;
   applyDesignTokens(els.screen, { common, content: contentSettings });
   applyVisibility(els, common);
-  if (options.fit !== false) fitFixedScreen(els.screen, design.width, design.height);
+  const cleanups = [];
+  const fitTo = () => {
+    if (options.fit === false) return;
+    const host = options.fitHost || els.root;
+    const bounds = host && host !== document.body ? measureVisibleBox(host) : null;
+    fitFixedScreen(els.screen, design.width || FIXED_DESIGN.width, design.height || FIXED_DESIGN.height, bounds);
+  };
+  fitTo();
+  if (options.fitHost) {
+    const ro = new ResizeObserver(fitTo);
+    ro.observe(options.fitHost);
+    cleanups.push(() => ro.disconnect());
+  }
 
   let map = options.map || null;
   try {
@@ -197,7 +209,9 @@ export async function mountSignage(root, options = {}) {
     data,
     refresh,
     destroy() {
-      /* 地図はコンテナに保持し、更新時は破棄しない */
+      cleanups.forEach((fn) => {
+        try { fn(); } catch { /* ignore */ }
+      });
     }
   };
 }

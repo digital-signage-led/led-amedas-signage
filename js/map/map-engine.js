@@ -1,10 +1,10 @@
 /**
- * 3コンテンツ共通の地図。位置・ズーム・ピンはここだけを変える。
- * 観測値ラベルの中身だけ各コンテンツから渡す。
+ * 県境のシンプルな白地図。道路・淡色タイルは使わない。
+ * 親要素の CSS transform で地図を拡大しない。
  */
 
-const GSI_PALE = "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png";
-const GSI_ATTR = "地理院タイル";
+const PREF_GEOJSON = new URL("../../data/japan-prefectures.geojson", import.meta.url).href;
+const SEA = "#6e9bb8";
 
 let leafletPromise = null;
 
@@ -12,10 +12,13 @@ function loadLeaflet() {
   if (window.L) return Promise.resolve(window.L);
   if (leafletPromise) return leafletPromise;
   leafletPromise = new Promise((resolve, reject) => {
-    const css = document.createElement("link");
-    css.rel = "stylesheet";
-    css.href = new URL("../../vendor/leaflet/leaflet.css", import.meta.url).href;
-    document.head.appendChild(css);
+    if (!document.querySelector("link[data-leaflet]")) {
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.dataset.leaflet = "1";
+      css.href = new URL("../../vendor/leaflet/leaflet.css", import.meta.url).href;
+      document.head.appendChild(css);
+    }
     const script = document.createElement("script");
     script.src = new URL("../../vendor/leaflet/leaflet.js", import.meta.url).href;
     script.onload = () => resolve(window.L);
@@ -25,22 +28,113 @@ function loadLeaflet() {
   return leafletPromise;
 }
 
-function zoomFor(pref, point, mapMode) {
-  if (mapMode === "station" && point) return Math.min(11, Math.max(9.2, pref.defaultZoom + 1.6));
-  if (!point) return pref.defaultZoom;
+let prefGeoPromise = null;
+
+function loadPrefGeo() {
+  if (!prefGeoPromise) {
+    prefGeoPromise = fetch(PREF_GEOJSON)
+      .then((res) => {
+        if (!res.ok) throw new Error("県境データを読み込めませんでした");
+        return res.json();
+      })
+      .catch((err) => {
+        prefGeoPromise = null;
+        throw err;
+      });
+  }
+  return prefGeoPromise;
+}
+
+function featurePrefId(feature) {
+  return String(feature?.properties?.id || "").padStart(2, "0");
+}
+
+function fillStyle(feature, currentId) {
+  const focus = featurePrefId(feature) === currentId;
+  return {
+    stroke: false,
+    fillColor: focus ? "#eceeef" : "#c4c8cd",
+    fillOpacity: focus ? 0.92 : 0.62
+  };
+}
+
+function strokeStyle(feature, currentId) {
+  const focus = featurePrefId(feature) === currentId;
+  return {
+    fill: false,
+    color: focus ? "#3d424a" : "#7a8088",
+    weight: focus ? 3.4 : 1.5,
+    opacity: 1,
+    lineJoin: "round",
+    lineCap: "round"
+  };
+}
+
+function waitSize(el) {
+  return new Promise((resolve) => {
+    let n = 0;
+    const tick = () => {
+      n += 1;
+      if ((el.clientWidth >= 80 && el.clientHeight >= 80) || n > 40) {
+        resolve();
+        return;
+      }
+      setTimeout(tick, 50);
+    };
+    tick();
+  });
+}
+
+function isRemotePoint(pref, point) {
+  if (!point) return false;
   const dLat = Math.abs(point.latitude - pref.centerLatitude);
   const dLng = Math.abs(point.longitude - pref.centerLongitude);
-  if (dLat > 1.4 || dLng > 1.6) return Math.min(10.2, Math.max(8.6, pref.defaultZoom + 1.4));
+  return dLat > 1.4 || dLng > 1.6;
+}
+
+function prefMaxZoom(pref) {
+  return Math.min(10.5, 8.5 + (Number(pref?.zoomBoost) || 0));
+}
+
+function zoomForPoint(pref, point) {
+  if (isRemotePoint(pref, point)) return Math.min(prefMaxZoom(pref), Math.max(7, pref.defaultZoom || 8));
   return pref.defaultZoom;
 }
 
-export function mapCenter(pref, point, mapMode) {
-  if (mapMode === "station" && point) return [point.latitude, point.longitude];
-  if (!point) return [pref.centerLatitude, pref.centerLongitude];
-  const dLat = Math.abs(point.latitude - pref.centerLatitude);
-  const dLng = Math.abs(point.longitude - pref.centerLongitude);
-  if (dLat > 1.4 || dLng > 1.6) return [point.latitude, point.longitude];
+export function mapCenter(pref, point) {
+  if (isRemotePoint(pref, point)) return [point.latitude, point.longitude];
   return [pref.centerLatitude, pref.centerLongitude];
+}
+
+function clampZoom(zoom, pref) {
+  return Math.min(prefMaxZoom(pref), Math.max(5.5, Number(zoom) || 7.5));
+}
+
+function prefLatLngBounds(L, pref) {
+  const b = pref?.bounds;
+  if (!b) return null;
+  return L.latLngBounds([b.south, b.west], [b.north, b.east]);
+}
+
+function applyPrefView(map, L, pref, point, mapMode) {
+  if (mapMode === "station" && point) {
+    map.setView([point.latitude, point.longitude], Math.min(prefMaxZoom(pref), Math.max(9.2, (pref.defaultZoom || 8) + 1.2)), { animate: false });
+    return;
+  }
+  if (isRemotePoint(pref, point)) {
+    map.setView([point.latitude, point.longitude], clampZoom(zoomForPoint(pref, point), pref), { animate: false });
+    return;
+  }
+  const bounds = prefLatLngBounds(L, pref);
+  if (bounds) {
+    map.fitBounds(bounds, {
+      padding: [28, 28],
+      maxZoom: prefMaxZoom(pref),
+      animate: false
+    });
+    return;
+  }
+  map.setView(mapCenter(pref, point), clampZoom(pref.defaultZoom, pref), { animate: false });
 }
 
 function escapeHtml(value) {
@@ -52,14 +146,25 @@ function escapeHtml(value) {
 
 export async function createMap(container, { prefecture, point, interactive = false, mapMode = "prefecture" }) {
   const L = await loadLeaflet();
+  const prefGeo = await loadPrefGeo().catch(() => null);
+  await waitSize(container);
   if (container._amedasMap) {
     container._amedasMap.setView(prefecture, point, mapMode);
     return container._amedasMap;
   }
   if (container._leaflet_id) {
+    try {
+      container._leaflet?.remove?.();
+    } catch {
+      /* ignore */
+    }
     container._leaflet_id = null;
     container.innerHTML = "";
   }
+
+  let currentPref = prefecture;
+  let currentPoint = point;
+  let currentMode = mapMode;
   const map = L.map(container, {
     zoomControl: false,
     attributionControl: false,
@@ -69,26 +174,68 @@ export async function createMap(container, { prefecture, point, interactive = fa
     boxZoom: false,
     keyboard: false,
     tap: false,
-    zoomSnap: 0.1,
-    zoomDelta: 0.2
-  });
-  L.tileLayer(GSI_PALE, {
-    maxZoom: 14,
     minZoom: 5,
-    opacity: 1
-  }).addTo(map);
-  map.setView(mapCenter(prefecture, point, mapMode), zoomFor(prefecture, point, mapMode), { animate: false });
+    maxZoom: 10.5,
+    zoomSnap: 0.25,
+    zoomDelta: 0.25,
+    fadeAnimation: false,
+    zoomAnimation: false,
+    markerZoomAnimation: false
+  });
+  map.getContainer().style.background = SEA;
+  map.createPane("prefFillPane");
+  map.getPane("prefFillPane").style.zIndex = 350;
+  map.createPane("prefStrokePane");
+  map.getPane("prefStrokePane").style.zIndex = 460;
+  map.getPane("prefStrokePane").style.pointerEvents = "none";
 
-  const layer = L.layerGroup().addTo(map);
+  let fillLayer = null;
+  let strokeLayer = null;
+  const paintPrefs = () => {
+    const currentId = currentPref?.id;
+    if (fillLayer) fillLayer.setStyle((feature) => fillStyle(feature, currentId));
+    if (strokeLayer) {
+      strokeLayer.setStyle((feature) => strokeStyle(feature, currentId));
+      strokeLayer.eachLayer((layer) => {
+        if (featurePrefId(layer.feature) === currentId) layer.bringToFront();
+      });
+    }
+  };
+  if (prefGeo) {
+    fillLayer = L.geoJSON(prefGeo, {
+      pane: "prefFillPane",
+      interactive: false,
+      style: (feature) => fillStyle(feature, prefecture.id)
+    }).addTo(map);
+    strokeLayer = L.geoJSON(prefGeo, {
+      pane: "prefStrokePane",
+      interactive: false,
+      style: (feature) => strokeStyle(feature, prefecture.id)
+    }).addTo(map);
+  }
+  applyPrefView(map, L, prefecture, point, mapMode);
+  container._leaflet = map;
+
+  const stationLayer = L.layerGroup().addTo(map);
+
+  const refresh = () => {
+    map.invalidateSize(false);
+    if (currentPref) applyPrefView(map, L, currentPref, currentPoint, currentMode);
+  };
 
   const api = {
     map,
     L,
-    setView(nextPref, nextPoint, nextMode = mapMode) {
-      map.setView(mapCenter(nextPref, nextPoint, nextMode), zoomFor(nextPref, nextPoint, nextMode), { animate: false });
+    setView(nextPref, nextPoint, nextMode = currentMode) {
+      currentPref = nextPref;
+      currentPoint = nextPoint;
+      currentMode = nextMode;
+      paintPrefs();
+      applyPrefView(map, L, nextPref, nextPoint, nextMode);
+      refresh();
     },
     setStations(rows = [], { showLabels = true } = {}) {
-      layer.clearLayers();
+      stationLayer.clearLayers();
       for (const row of rows) {
         const station = row.station;
         if (!station) continue;
@@ -113,21 +260,24 @@ export async function createMap(container, { prefecture, point, interactive = fa
           interactive: false,
           keyboard: false,
           zIndexOffset: selected ? 400 : 0
-        }).addTo(layer);
+        }).addTo(stationLayer);
       }
     },
     invalidate() {
-      map.invalidateSize(false);
+      refresh();
     },
     destroy() {
       map.remove();
       delete container._amedasMap;
+      delete container._leaflet;
     }
   };
 
   container._amedasMap = api;
-  requestAnimationFrame(() => api.invalidate());
+  requestAnimationFrame(refresh);
+  setTimeout(refresh, 120);
+  setTimeout(refresh, 400);
   return api;
 }
 
-export const MAP_ATTRIBUTION = `${GSI_ATTR} © 国土地理院 ／ アメダス観測 © 気象庁`;
+export const MAP_ATTRIBUTION = "都道府県界 ／ アメダス観測 © 気象庁";

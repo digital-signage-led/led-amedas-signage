@@ -13,12 +13,18 @@
 <body class="admin">
   <div class="admin-app">
     <header class="admin-bar">
-      <div>
-        <h1>⑤ 観測情報 管理</h1>
-        <p>都道府県 → 観測地点 → コンテンツ。編集は下書き、公開してから本番へ反映します。</p>
-      </div>
+      <h1>⑤ 観測情報 管理</h1>
+      <label class="bar-field">都道府県
+        <select id="pref-select"></select>
+      </label>
+      <label class="bar-field">コンテンツ
+        <select id="content-select"></select>
+      </label>
+      <label class="bar-field">観測地点
+        <select id="point-select"></select>
+      </label>
+      <span id="combo-status">公開済み</span>
       <div class="admin-actions">
-        <span id="combo-status">公開済み</span>
         <button type="button" id="btn-save" class="ghost">下書き保存</button>
         <button type="button" id="btn-publish" class="warn">この組み合わせを公開</button>
         <button type="button" id="btn-publish-all">141件を公開</button>
@@ -27,97 +33,71 @@
     </header>
 
     <section class="admin-controls">
-      <fieldset>
-        <legend>選択</legend>
-        <label>都道府県
-          <select id="pref-select"></select>
-        </label>
-        <label>表示地域
-          <select id="region-view" disabled></select>
-        </label>
-        <label>観測地点
-          <select id="point-select"></select>
-        </label>
-        <label>コンテンツ
-          <select id="content-select"></select>
-        </label>
-      </fieldset>
+      <label>解像度
+        <select id="resolution" data-live>
+          <option value="1920x1080">1920×1080</option>
+          <option value="1280x720">1280×720</option>
+          <option value="3840x2160">3840×2160</option>
+        </select>
+      </label>
+      <label>地図の見方
+        <select id="map-mode" data-live>
+          <option value="prefecture">都道府県全体</option>
+          <option value="station">観測地点中心</option>
+        </select>
+      </label>
+      <label>背景
+        <select id="background" data-live>
+          <option value="sea">サイネージ青</option>
+          <option value="dark">ダーク</option>
+          <option value="white">ライト</option>
+          <option value="night">ナイト</option>
+        </select>
+      </label>
+      <label>更新間隔分 <input id="refresh-min" data-live type="number" min="10" max="30" step="5"></label>
+      <label>表示倍率 <input id="display-scale" data-live type="range" min="0.8" max="1.2" step="0.02"></label>
+      <label>タイトル大きさ <input id="title-size" data-live type="range" min="0.7" max="1.6" step="0.02"></label>
+      <label>タイトル左右 <input id="title-x" data-live type="range" min="-80" max="80" step="1"></label>
+      <label>タイトル上下 <input id="title-y" data-live type="range" min="-40" max="40" step="1"></label>
+      <label>地図サイズ <input id="map-scale" data-live type="range" min="0.7" max="1.4" step="0.02"></label>
+      <label>地図左右 <input id="map-x" data-live type="range" min="-80" max="80" step="1"></label>
+      <label>地図上下 <input id="map-y" data-live type="range" min="-60" max="60" step="1"></label>
+      <label>文字サイズ <input id="font-size" data-live type="range" min="0.8" max="1.4" step="0.02"></label>
+      <label>数値サイズ <input id="number-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
+      <label>パネル左右 <input id="panel-x" data-live type="range" min="-60" max="60" step="1"></label>
+      <label>パネル上下 <input id="panel-y" data-live type="range" min="-40" max="40" step="1"></label>
+      <label>余白 <input id="padding" data-live type="range" min="0.7" max="1.3" step="0.02"></label>
+      <label class="check"><input id="show-stamp" data-live type="checkbox"> 観測時刻</label>
+      <label class="check"><input id="show-point" data-live type="checkbox"> 観測地点</label>
+      <label class="check"><input id="show-clock" data-live type="checkbox"> 画面更新</label>
+      <label class="check"><input id="show-panel" data-live type="checkbox"> 情報パネル</label>
+      <label class="check"><input id="show-attr" data-live type="checkbox"> 出典</label>
+      <label class="check"><input id="show-labels" data-live type="checkbox"> 地図ラベル</label>
 
-      <fieldset>
-        <legend>共通設定</legend>
-        <label>解像度
-          <select id="resolution" data-live>
-            <option value="1920x1080">1920×1080</option>
-            <option value="1280x720">1280×720</option>
-            <option value="3840x2160">3840×2160</option>
-          </select>
-        </label>
-        <label>地図の見方
-          <select id="map-mode" data-live>
-            <option value="prefecture">都道府県全体</option>
-            <option value="station">観測地点中心</option>
-          </select>
-        </label>
-        <label>背景
-          <select id="background" data-live>
-            <option value="sea">サイネージ青</option>
-            <option value="dark">ダーク</option>
-            <option value="white">ライト</option>
-            <option value="night">ナイト</option>
-          </select>
-        </label>
-        <label>更新間隔（分） <input id="refresh-min" data-live type="number" min="10" max="30" step="5"></label>
-        <label>表示倍率 <input id="display-scale" data-live type="range" min="0.8" max="1.2" step="0.02"></label>
-        <label>タイトルサイズ <input id="title-size" data-live type="range" min="0.7" max="1.6" step="0.02"></label>
-        <label>タイトル左右 <input id="title-x" data-live type="range" min="-80" max="80" step="1"></label>
-        <label>タイトル上下 <input id="title-y" data-live type="range" min="-40" max="40" step="1"></label>
-        <label>地図サイズ <input id="map-scale" data-live type="range" min="0.7" max="1.4" step="0.02"></label>
-        <label>地図左右 <input id="map-x" data-live type="range" min="-80" max="80" step="1"></label>
-        <label>地図上下 <input id="map-y" data-live type="range" min="-60" max="60" step="1"></label>
-        <label>文字サイズ <input id="font-size" data-live type="range" min="0.8" max="1.4" step="0.02"></label>
-        <label>数値サイズ <input id="number-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
-        <label>情報パネル左右 <input id="panel-x" data-live type="range" min="-60" max="60" step="1"></label>
-        <label>情報パネル上下 <input id="panel-y" data-live type="range" min="-40" max="40" step="1"></label>
-        <label>余白 <input id="padding" data-live type="range" min="0.7" max="1.3" step="0.02"></label>
-        <label class="check"><input id="show-stamp" data-live type="checkbox"> 観測時刻を表示</label>
-        <label class="check"><input id="show-point" data-live type="checkbox"> 観測地点を表示</label>
-        <label class="check"><input id="show-clock" data-live type="checkbox"> 画面更新時刻を表示</label>
-        <label class="check"><input id="show-panel" data-live type="checkbox"> 情報パネルを表示</label>
-        <label class="check"><input id="show-attr" data-live type="checkbox"> 出典を表示</label>
-        <label class="check"><input id="show-labels" data-live type="checkbox"> 地図上の数値ラベル</label>
-      </fieldset>
-
-      <fieldset data-for-content="amedas_temp">
-        <legend>アメダス気温だけの設定</legend>
-        <label>気温表示 左右 <input id="temp-x" data-live type="range" min="-80" max="80" step="1"></label>
-        <label>気温表示 上下 <input id="temp-y" data-live type="range" min="-60" max="60" step="1"></label>
-        <label>気温文字サイズ <input id="temp-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
-        <label class="check"><input id="temp-unit" data-live type="checkbox"> 単位（℃）を表示</label>
-        <label class="check"><input id="temp-name" data-live type="checkbox"> 観測地点名を表示</label>
-      </fieldset>
-      <fieldset data-for-content="amedas_precip">
-        <legend>アメダス降水量だけの設定</legend>
-        <label>降水量表示 左右 <input id="rain-x" data-live type="range" min="-80" max="80" step="1"></label>
-        <label>降水量表示 上下 <input id="rain-y" data-live type="range" min="-60" max="60" step="1"></label>
-        <label>降水量文字サイズ <input id="rain-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
-        <label class="check"><input id="rain-unit" data-live type="checkbox"> 単位（mm）を表示</label>
-        <label class="check"><input id="rain-name" data-live type="checkbox"> 観測地点名を表示</label>
-      </fieldset>
-      <fieldset data-for-content="amedas_wind">
-        <legend>アメダス風向・風速だけの設定</legend>
-        <label>風向表示 左右 <input id="dir-x" data-live type="range" min="-80" max="80" step="1"></label>
-        <label>風向表示 上下 <input id="dir-y" data-live type="range" min="-60" max="60" step="1"></label>
-        <label>風速表示 左右 <input id="speed-x" data-live type="range" min="-80" max="80" step="1"></label>
-        <label>風速表示 上下 <input id="speed-y" data-live type="range" min="-60" max="60" step="1"></label>
+      <span data-for-content="amedas_temp" class="content-tools">
+        <label>気温左右 <input id="temp-x" data-live type="range" min="-80" max="80" step="1"></label>
+        <label>気温上下 <input id="temp-y" data-live type="range" min="-60" max="60" step="1"></label>
+        <label>気温サイズ <input id="temp-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
+        <label class="check"><input id="temp-unit" data-live type="checkbox"> 単位℃</label>
+        <label class="check"><input id="temp-name" data-live type="checkbox"> 地点名</label>
+      </span>
+      <span data-for-content="amedas_precip" class="content-tools">
+        <label>降水左右 <input id="rain-x" data-live type="range" min="-80" max="80" step="1"></label>
+        <label>降水上下 <input id="rain-y" data-live type="range" min="-60" max="60" step="1"></label>
+        <label>降水サイズ <input id="rain-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
+        <label class="check"><input id="rain-unit" data-live type="checkbox"> 単位mm</label>
+        <label class="check"><input id="rain-name" data-live type="checkbox"> 地点名</label>
+      </span>
+      <span data-for-content="amedas_wind" class="content-tools">
+        <label>風向左右 <input id="dir-x" data-live type="range" min="-80" max="80" step="1"></label>
+        <label>風向上下 <input id="dir-y" data-live type="range" min="-60" max="60" step="1"></label>
+        <label>風速左右 <input id="speed-x" data-live type="range" min="-80" max="80" step="1"></label>
+        <label>風速上下 <input id="speed-y" data-live type="range" min="-60" max="60" step="1"></label>
         <label>矢印サイズ <input id="arrow-size" data-live type="range" min="0.6" max="1.6" step="0.02"></label>
-        <label>風速文字サイズ <input id="speed-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
-        <label class="check"><input id="wind-unit" data-live type="checkbox"> 単位（m/s）を表示</label>
-        <label class="check"><input id="wind-name" data-live type="checkbox"> 観測地点名を表示</label>
-      </fieldset>
-    </section>
-
-    <section class="admin-preview" aria-label="プレビュー">
-      <div id="preview-host"></div>
+        <label>風速サイズ <input id="speed-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
+        <label class="check"><input id="wind-unit" data-live type="checkbox"> 単位m/s</label>
+        <label class="check"><input id="wind-name" data-live type="checkbox"> 地点名</label>
+      </span>
     </section>
 
     <section class="admin-urls">
@@ -140,6 +120,10 @@
           <tbody id="url-table"></tbody>
         </table>
       </div>
+    </section>
+
+    <section class="admin-preview" aria-label="プレビュー">
+      <div id="preview-host"></div>
     </section>
   </div>
   <div id="toast" hidden></div>
