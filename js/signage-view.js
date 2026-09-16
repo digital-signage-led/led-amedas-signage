@@ -17,6 +17,7 @@ const RENDERERS = {
 };
 
 const TABLE_ATTRIBUTION = "アメダス観測 © 気象庁";
+const CYCLE_MS = 7000;
 
 function screenHtml() {
   return `
@@ -75,9 +76,32 @@ function applyTable(els, data, contentId, showUnit, hidden = 0) {
   if (!els.tableCanvas) return;
   els.tableCanvas.innerHTML = `
     <div class="table-kicker">${tableKicker(contentId)}</div>
+    <div class="cycle-bar" aria-hidden="true"><i></i></div>
     ${mainStationTable(contentId, data, showUnit)}
     ${hidden > 0 ? `<div class="table-more">ほか ${hidden} 地点</div>` : ""}
   `;
+}
+
+function restartCycleBar(els) {
+  const bar = els.tableCanvas?.querySelector(".cycle-bar > i");
+  if (!bar) return;
+  bar.style.animation = "none";
+  void bar.offsetWidth;
+  bar.style.animation = "";
+}
+
+function focusBundle(data, stationId) {
+  const rows = data.stations || [];
+  if (!rows.length) return data;
+  const match = rows.find((row) => row.station.id === stationId) || rows[0];
+  for (const row of rows) row.selected = row.station.id === match.station.id;
+  data.selected = {
+    station: match.station,
+    obs: match.obs,
+    missing: false,
+    wind: windDirectionInfo(match.obs?.windDirection)
+  };
+  return data;
 }
 
 function applyStamp(els, data) {
@@ -153,6 +177,27 @@ export async function mountSignage(root, options = {}) {
 
   const tableSet = tableStations(prefecture.slug, point, content.id, 36);
   const nearby = tableSet.points;
+  let latest = null;
+  let focusIndex = Math.max(0, nearby.findIndex((item) => item.id === point.id));
+  const render = RENDERERS[content.id] || renderTemperature;
+
+  function paint(animate) {
+    if (!latest) return;
+    const row = latest.stations?.[focusIndex] || latest.stations?.[0];
+    if (!row) return;
+    focusBundle(latest, row.station.id);
+    els.tableCanvas.querySelectorAll("tr[data-station]").forEach((tr) => {
+      tr.classList.toggle("is-selected", tr.dataset.station === row.station.id);
+    });
+    els.point.textContent = `観測地点 ${row.station.name}`;
+    if (animate) {
+      els.panel.classList.remove("is-swap");
+      void els.panel.offsetWidth;
+      els.panel.classList.add("is-swap");
+    }
+    render({ prefecture, content, point: row.station, common, contentSettings, els }, latest);
+    restartCycleBar(els);
+  }
 
   async function refresh() {
     let data;
@@ -174,19 +219,35 @@ export async function mountSignage(root, options = {}) {
         message: "データ取得に失敗しました"
       };
     }
+    latest = data;
+    if (latest.stations?.length) {
+      focusIndex = Math.min(focusIndex, latest.stations.length - 1);
+    }
     try {
-      applyTable(els, data, content.id, contentSettings.showUnit !== false, tableSet.hidden);
-      const render = RENDERERS[content.id] || renderTemperature;
-      render({ prefecture, content, point, common, contentSettings, els }, data);
+      applyTable(els, latest, content.id, contentSettings.showUnit !== false, tableSet.hidden);
+      paint(false);
     } catch {
       els.panel.insertAdjacentHTML("beforeend", `<div class="data-error">表示処理で問題が起きました</div>`);
     }
-    applyStamp(els, data);
-    els.screen.dataset.ready = data.ok || data.fromCache ? "1" : "0";
-    return data;
+    applyStamp(els, latest);
+    els.screen.dataset.ready = latest.ok || latest.fromCache ? "1" : "0";
+    return latest;
   }
 
   const data = await refresh();
+
+  const cycleTimer = window.setInterval(() => {
+    if (document.hidden || !latest?.stations?.length) return;
+    focusIndex = (focusIndex + 1) % latest.stations.length;
+    paint(true);
+  }, CYCLE_MS);
+  cleanups.push(() => window.clearInterval(cycleTimer));
+
+  const onVisible = () => {
+    if (!document.hidden) restartCycleBar(els);
+  };
+  document.addEventListener("visibilitychange", onVisible);
+  cleanups.push(() => document.removeEventListener("visibilitychange", onVisible));
 
   return {
     prefecture,

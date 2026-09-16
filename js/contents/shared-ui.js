@@ -140,7 +140,7 @@ export function obsTable(headers, rows, extraClass = "") {
       </thead>
       <tbody>
         ${rows.map((row) => `
-          <tr class="${row.selected ? "is-selected" : ""}">
+          <tr class="${row.selected ? "is-selected" : ""}" ${row.stationId ? `data-station="${row.stationId}"` : ""}>
             ${row.cells.map((cell, i) => `<t${i === 0 ? "h" : "d"} scope="${i === 0 ? "row" : "col"}">${cell}</t${i === 0 ? "h" : "d"}>`).join("")}
           </tr>
         `).join("")}
@@ -152,6 +152,7 @@ export function obsTable(headers, rows, extraClass = "") {
 export function stationRows(data, pickCells, nameExtra) {
   return (data.stations || []).map((row) => ({
     selected: !!row.selected,
+    stationId: row.station.id,
     cells: [`${row.station.name}${nameExtra ? nameExtra(row) : ""}`, ...pickCells(row)]
   }));
 }

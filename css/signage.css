@@ -142,6 +142,27 @@ html.is-boot #boot-status { display: flex; }
   letter-spacing: 0.08em;
 }
 
+.cycle-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: #d7e1ee;
+  overflow: hidden;
+}
+
+.cycle-bar > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #4c8dff, #1f6feb);
+  transform-origin: left center;
+  animation: cycleBar 7s linear infinite;
+}
+
+@keyframes cycleBar {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 .table-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -188,6 +209,18 @@ html.is-boot #boot-status { display: flex; }
   flex-direction: column;
   gap: 16px;
   transform: translate(var(--panel-x, 0px), var(--panel-y, 0px));
+}
+
+.info-panel.is-swap .obs-station,
+.info-panel.is-swap .obs-value,
+.info-panel.is-swap .wind-dir-name,
+.info-panel.is-swap .wind-speed {
+  animation: panelTick 0.5s ease;
+}
+
+@keyframes panelTick {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
 
 .panel-kicker {
@@ -301,12 +334,17 @@ html.is-boot #boot-status { display: flex; }
   height: 100%;
 }
 
+.obs-table.is-main tbody tr {
+  transition: background-color 0.55s ease, color 0.55s ease;
+}
+
 .obs-table.is-main th,
 .obs-table.is-main td {
   padding: 0 22px;
   font-size: calc(40px * var(--number-scale, 1));
   color: #0a2f7a;
   border-bottom: 1px solid #d5deea;
+  transition: background-color 0.55s ease, color 0.55s ease;
 }
 
 .obs-table.is-main thead th {
@@ -324,6 +362,15 @@ html.is-boot #boot-status { display: flex; }
 .obs-table.is-main tr.is-selected td {
   background: #1f6feb;
   color: #fff;
+}
+
+.obs-table.is-main tr.is-selected {
+  animation: selectPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes selectPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12); }
 }
 
 .obs-table.is-main .is-miss {
@@ -385,6 +432,12 @@ html.is-boot #boot-status { display: flex; }
   letter-spacing: 0.04em;
   vertical-align: middle;
   color: #fff;
+  animation: tagPulse 2s ease-in-out infinite;
+}
+
+@keyframes tagPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.88; }
 }
 .row-tag.is-max { background: #c62828; }
 .row-tag.is-min { background: #1565c0; }
@@ -480,6 +533,12 @@ html.is-boot #boot-status { display: flex; }
   height: calc(112px * var(--arrow-scale, 1));
   margin: 6px 0 4px;
   color: #7ecbff;
+  animation: windPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes windPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .wind-arrow {
