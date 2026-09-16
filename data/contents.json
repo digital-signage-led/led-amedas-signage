@@ -1,0 +1,10 @@
+{
+  "category": "観測情報",
+  "genre": "⑤ 観測情報",
+  "resolution": { "width": 1920, "height": 1080 },
+  "contents": [
+    { "id": "amedas_temp", "name": "アメダス気温", "data": "jma_amedas", "unit": "℃" },
+    { "id": "amedas_precip", "name": "アメダス降水量", "data": "jma_amedas", "unit": "mm" },
+    { "id": "amedas_wind", "name": "アメダス風向・風速", "data": "jma_amedas", "unit": "m/s" }
+  ]
+}

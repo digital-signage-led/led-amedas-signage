@@ -1,0 +1,12 @@
+{
+  "name": "led-amedas-signage",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "47都道府県対応の観測情報LEDサイネージ。アメダス気温 / 降水量 / 風向・風速。",
+  "scripts": {
+    "start": "node scripts/preview-server.mjs",
+    "test": "node scripts/test-catalog.mjs && node scripts/verify-amedas.mjs",
+    "stations": "node scripts/build-stations.mjs"
+  }
+}
