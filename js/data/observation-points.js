@@ -45,15 +45,16 @@ export function comboKey(prefectureSlug, contentId) {
 }
 
 export function nearbyPoints(prefectureSlug, selected, contentId, limit = 18) {
+  return tableStations(prefectureSlug, selected, contentId, limit).points;
+}
+
+export function tableStations(prefectureSlug, selected, contentId, limit = 36) {
   const list = pointsForPrefecture(prefectureSlug, contentId);
-  if (!selected) return list.slice(0, limit);
-  const scored = list
-    .filter((item) => item.id !== selected.id)
-    .map((item) => ({
-      item,
-      dist: (item.latitude - selected.latitude) ** 2 + (item.longitude - selected.longitude) ** 2,
-      rank: item.type === "A" ? 0 : item.type === "B" ? 1 : 2
-    }))
-    .sort((a, b) => a.rank - b.rank || a.dist - b.dist);
-  return [selected, ...scored.slice(0, Math.max(0, limit - 1)).map((row) => row.item)];
+  if (list.length <= limit) return { points: list, hidden: 0 };
+  const selectedId = selected?.id;
+  let points = list.slice(0, limit);
+  if (selectedId && !points.some((item) => item.id === selectedId)) {
+    points = [selected, ...list.filter((item) => item.id !== selectedId).slice(0, limit - 1)];
+  }
+  return { points, hidden: list.length - points.length };
 }

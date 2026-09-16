@@ -1,3 +1,4 @@
+import { windDirectionInfo } from "../services/amedas.js";
 import { formatClock, formatStamp } from "../services/jma-common.js";
 
 export function timesBlock({ dataUpdatedAt, displayUpdatedAt, fromCache, message }) {
@@ -54,9 +55,9 @@ export function tableCell(value, format, unit = "") {
   return `${text}${unit}`;
 }
 
-export function obsTable(headers, rows) {
+export function obsTable(headers, rows, extraClass = "") {
   return `
-    <table class="obs-table">
+    <table class="obs-table ${extraClass}">
       <thead>
         <tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr>
       </thead>
@@ -72,25 +73,47 @@ export function obsTable(headers, rows) {
 }
 
 export function stationRows(data, pickCells) {
-  return (data.stations || []).slice(0, 10).map((row) => ({
+  return (data.stations || []).map((row) => ({
     selected: !!row.selected,
     cells: [row.station.name, ...pickCells(row)]
   }));
 }
 
-export function mapLabelFor(contentId, obs, wind) {
+function tableClass(rowCount) {
+  return rowCount > 12 ? "is-main is-compact" : "is-main";
+}
+
+function renderSplitTable(headers, rows) {
+  const klass = tableClass(Math.ceil(rows.length / 2));
+  if (rows.length <= 10) return obsTable(headers, rows, tableClass(rows.length));
+  const mid = Math.ceil(rows.length / 2);
+  return `<div class="table-split">${obsTable(headers, rows.slice(0, mid), klass)}${obsTable(headers, rows.slice(mid), klass)}</div>`;
+}
+
+export function mainStationTable(contentId, data, showUnit = true) {
   if (contentId === "amedas_temp") {
-    return obs.temp == null ? "—" : `${Number(obs.temp).toFixed(1)}`;
+    return renderSplitTable(
+      ["地点", showUnit ? "気温（℃）" : "気温"],
+      stationRows(data, (row) => [tableCell(row.obs.temp, (v) => Number(v).toFixed(1))])
+    );
   }
   if (contentId === "amedas_precip") {
-    const value = obs.precipitation1h ?? obs.precipitation10m;
-    return value == null ? "—" : `${Number(value).toFixed(1)}`;
+    return renderSplitTable(
+      ["地点", "10分", "1時間", "3時間", "24時間"],
+      stationRows(data, (row) => [
+        tableCell(row.obs.precipitation10m, (v) => Number(v).toFixed(1)),
+        tableCell(row.obs.precipitation1h, (v) => Number(v).toFixed(1)),
+        tableCell(row.obs.precipitation3h, (v) => Number(v).toFixed(1)),
+        tableCell(row.obs.precipitation24h, (v) => Number(v).toFixed(1))
+      ])
+    );
   }
-  if (contentId === "amedas_wind") {
-    if (obs.wind == null && !wind?.label) return "—";
-    const dir = wind?.calm ? "静穏" : (wind?.label || "");
-    const spd = obs.wind == null ? "" : Number(obs.wind).toFixed(1);
-    return [dir, spd].filter(Boolean).join(" ");
-  }
-  return "—";
+  return renderSplitTable(
+    ["地点", "風向", showUnit ? "風速（m/s）" : "風速"],
+    stationRows(data, (row) => {
+      const wind = windDirectionInfo(row.obs.windDirection);
+      const dir = wind.calm ? "静穏" : (wind.label || missText());
+      return [dir, tableCell(row.obs.wind, (v) => Number(v).toFixed(1))];
+    })
+  );
 }

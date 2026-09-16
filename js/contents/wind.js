@@ -1,5 +1,5 @@
-import { formatWindMs, windDirectionInfo } from "../services/amedas.js";
-import { missText, obsTable, stationCaption, stationRows, tableCell, timesBlock } from "./shared-ui.js";
+import { formatWindMs } from "../services/amedas.js";
+import { stationCaption, timesBlock } from "./shared-ui.js";
 
 function arrowSvg(deg) {
   return `
@@ -8,12 +8,6 @@ function arrowSvg(deg) {
       <path d="M60 16 L78 78 L60 66 L42 78 Z" fill="currentColor"/>
     </svg>
   `;
-}
-
-function dirCell(obs) {
-  const wind = windDirectionInfo(obs.windDirection);
-  if (wind.calm) return "静穏";
-  return wind.label || missText();
 }
 
 export function renderWind(ctx, data) {
@@ -45,13 +39,6 @@ export function renderWind(ctx, data) {
         <div class="obs-value-label">風速</div>
       </div>
     </div>
-    ${obsTable(
-      ["地点", "風向", `風速${unit ? `（${unit}）` : ""}`],
-      stationRows(data, (row) => [
-        dirCell(row.obs),
-        tableCell(row.obs.wind, formatWindMs)
-      ])
-    )}
     ${timesBlock({
       dataUpdatedAt: data.reportAt,
       displayUpdatedAt: data.fetchedAt,

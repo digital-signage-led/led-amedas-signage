@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { CONTENTS, canonicalContent } from "../js/data/contents.js";
 import { AMEDAS_STATIONS, AMEDAS_STATION_META } from "../js/data/amedas-stations.js";
-import { defaultPoint, pointsForPrefecture } from "../js/data/observation-points.js";
+import { defaultPoint, pointsForPrefecture, tableStations } from "../js/data/observation-points.js";
 import { PREFECTURES, canonicalPrefecture, getPrefecture, prefectureFromAmedasId, regionOf } from "../js/data/prefectures.js";
 import { windDirectionInfo } from "../js/services/amedas.js";
 
@@ -49,5 +49,12 @@ assert.equal(windDirectionInfo(16).fromDeg, 0);
 assert.equal(windDirectionInfo(16).toDeg, 180);
 assert.equal(windDirectionInfo(2).fromDeg, 45);
 assert.equal(windDirectionInfo(2).toDeg, 225);
+
+const toyamaTable = tableStations("toyama", defaultPoint("toyama", "amedas_temp"), "amedas_temp", 36);
+assert.ok(toyamaTable.points.length >= 8, "toyama table should list official stations");
+assert.ok(toyamaTable.points.some((p) => p.id === defaultPoint("toyama").id));
+const hokkaidoTable = tableStations("hokkaido", defaultPoint("hokkaido", "amedas_temp"), "amedas_temp", 36);
+assert.equal(hokkaidoTable.points.length, 36);
+assert.ok(hokkaidoTable.hidden > 0);
 
 console.log(`catalog ok: 47 prefectures, 3 contents, 141 URLs, ${AMEDAS_STATIONS.length} official stations`);

@@ -105,6 +105,10 @@ button.warn { background: #0f8a5a; }
   gap: 10px 14px;
 }
 
+.content-tools[hidden] {
+  display: none !important;
+}
+
 .admin-controls input[type="range"] {
   width: 88px;
 }

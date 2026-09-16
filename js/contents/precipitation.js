@@ -1,5 +1,5 @@
 import { formatMm } from "../services/amedas.js";
-import { obsTable, stationCaption, stationRows, tableCell, timesBlock } from "./shared-ui.js";
+import { obsTable, stationCaption, tableCell, timesBlock } from "./shared-ui.js";
 
 export function renderPrecipitation(ctx, data) {
   const settings = ctx.contentSettings || {};
@@ -19,14 +19,6 @@ export function renderPrecipitation(ctx, data) {
         { selected: false, cells: ["3時間", unitCell(obs.precipitation3h)] },
         { selected: false, cells: ["24時間", unitCell(obs.precipitation24h)] }
       ]
-    )}
-    <div class="section-label">県内の観測地点</div>
-    ${obsTable(
-      ["地点", "10分", "1時間"],
-      stationRows(data, (row) => [
-        tableCell(row.obs.precipitation10m, formatMm),
-        tableCell(row.obs.precipitation1h, formatMm)
-      ])
     )}
     ${timesBlock({
       dataUpdatedAt: data.reportAt,

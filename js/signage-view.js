@@ -1,11 +1,10 @@
 import { renderPrecipitation } from "./contents/precipitation.js";
-import { mapLabelFor } from "./contents/shared-ui.js";
+import { mainStationTable } from "./contents/shared-ui.js";
 import { renderTemperature } from "./contents/temperature.js";
 import { renderWind } from "./contents/wind.js";
 import { getContent } from "./data/contents.js";
-import { defaultPoint, getPoint, nearbyPoints } from "./data/observation-points.js";
+import { defaultPoint, getPoint, tableStations } from "./data/observation-points.js";
 import { getPrefecture, regionOf } from "./data/prefectures.js";
-import { createMap, MAP_ATTRIBUTION } from "./map/map-engine.js";
 import { fetchAmedasBundle, windDirectionInfo } from "./services/amedas.js";
 import { formatStamp, nextAmedasRefreshDelay } from "./services/jma-common.js";
 import { settingsForSignage } from "./store.js";
@@ -16,6 +15,8 @@ const RENDERERS = {
   amedas_precip: renderPrecipitation,
   amedas_wind: renderWind
 };
+
+const TABLE_ATTRIBUTION = "アメダス観測 © 気象庁";
 
 function screenHtml() {
   return `
@@ -30,8 +31,8 @@ function screenHtml() {
         </div>
       </header>
       <div class="led-body">
-        <div class="map-stage">
-          <div class="map-canvas"></div>
+        <div class="table-stage">
+          <div class="table-canvas"></div>
         </div>
         <aside class="info-panel"></aside>
       </div>
@@ -50,7 +51,7 @@ export function buildScreen(root) {
     stamp: screen.querySelector(".led-stamp"),
     point: screen.querySelector(".led-point"),
     panel: screen.querySelector(".info-panel"),
-    mapCanvas: screen.querySelector(".map-canvas"),
+    tableCanvas: screen.querySelector(".table-canvas"),
     attr: screen.querySelector(".map-attribution")
   };
 }
@@ -64,21 +65,13 @@ function applyVisibility(els, common) {
   els.screen.classList.toggle("is-clock-off", common.showClock === false);
 }
 
-function applyMap(map, data, common, contentId) {
-  if (!map) return;
-  map.setStations(
-    (data.stations || []).map((row) => {
-      const wind = windDirectionInfo(row.obs.windDirection);
-      return {
-        station: row.station,
-        selected: row.selected,
-        label: mapLabelFor(contentId, row.obs, wind),
-        kind: contentId,
-        arrowDeg: contentId === "amedas_wind" && wind.toDeg != null ? wind.toDeg : null
-      };
-    }),
-    { showLabels: common.showMapLabels !== false }
-  );
+function applyTable(els, data, contentId, showUnit, hidden = 0) {
+  if (!els.tableCanvas) return;
+  els.tableCanvas.innerHTML = `
+    <div class="table-kicker">県内の観測地点</div>
+    ${mainStationTable(contentId, data, showUnit)}
+    ${hidden > 0 ? `<div class="table-more">ほか ${hidden} 地点</div>` : ""}
+  `;
 }
 
 function applyStamp(els, data) {
@@ -97,6 +90,22 @@ function applyStamp(els, data) {
     : "更新時刻を確認中";
 }
 
+function collectEls(root) {
+  if (root.querySelector(".led-screen")) {
+    return {
+      root,
+      screen: root.querySelector(".led-screen"),
+      title: root.querySelector(".led-title"),
+      stamp: root.querySelector(".led-stamp"),
+      point: root.querySelector(".led-point"),
+      panel: root.querySelector(".info-panel"),
+      tableCanvas: root.querySelector(".table-canvas"),
+      attr: root.querySelector(".map-attribution")
+    };
+  }
+  return buildScreen(root);
+}
+
 export async function mountSignage(root, options = {}) {
   const prefecture = getPrefecture(options.prefecture);
   const content = getContent(options.content);
@@ -105,23 +114,15 @@ export async function mountSignage(root, options = {}) {
   const common = published.common || {};
   const contentSettings = published.content || published.contents?.[content.id] || {};
   const design = designSize(common.resolution);
-  const els = root.querySelector(".led-screen") ? {
-    root,
-    screen: root.querySelector(".led-screen"),
-    title: root.querySelector(".led-title"),
-    stamp: root.querySelector(".led-stamp"),
-    point: root.querySelector(".led-point"),
-    panel: root.querySelector(".info-panel"),
-    mapCanvas: root.querySelector(".map-canvas"),
-    attr: root.querySelector(".map-attribution")
-  } : buildScreen(root);
+  const els = collectEls(root);
 
   els.screen.dataset.prefecture = prefecture.slug;
   els.screen.dataset.content = content.id;
   els.title.textContent = `${prefecture.name}｜${content.name}`;
   els.stamp.textContent = "データ取得中";
   els.point.textContent = point ? `観測地点 ${point.name}` : "";
-  els.attr.textContent = MAP_ATTRIBUTION;
+  els.attr.textContent = TABLE_ATTRIBUTION;
+  els.tableCanvas.innerHTML = `<div class="table-kicker">県内の観測地点</div><p class="wx-hint">データ取得中</p>`;
   els.panel.innerHTML = `
     <div class="panel-kicker">${content.name}</div>
     <div class="panel-area">${prefecture.name}${point ? `／${point.name}` : ""}</div>
@@ -144,23 +145,8 @@ export async function mountSignage(root, options = {}) {
     cleanups.push(() => ro.disconnect());
   }
 
-  let map = options.map || null;
-  try {
-    if (!map) {
-      map = await createMap(els.mapCanvas, {
-        prefecture,
-        point,
-        interactive: !!options.interactive,
-        mapMode: common.mapMode || "prefecture"
-      });
-    } else {
-      map.setView(prefecture, point, common.mapMode || "prefecture");
-    }
-  } catch {
-    map = null;
-  }
-
-  const nearby = nearbyPoints(prefecture.slug, point, content.id, 10);
+  const tableSet = tableStations(prefecture.slug, point, content.id, 36);
+  const nearby = tableSet.points;
 
   async function refresh() {
     let data;
@@ -183,15 +169,11 @@ export async function mountSignage(root, options = {}) {
       };
     }
     try {
+      applyTable(els, data, content.id, contentSettings.showUnit !== false, tableSet.hidden);
       const render = RENDERERS[content.id] || renderTemperature;
-      render({ prefecture, content, point, common, contentSettings, map, els }, data);
+      render({ prefecture, content, point, common, contentSettings, els }, data);
     } catch {
       els.panel.insertAdjacentHTML("beforeend", `<div class="data-error">表示処理で問題が起きました</div>`);
-    }
-    try {
-      applyMap(map, data, common, content.id);
-    } catch {
-      /* 地図更新失敗でも数値パネルは残す */
     }
     applyStamp(els, data);
     els.screen.dataset.ready = data.ok || data.fromCache ? "1" : "0";
@@ -204,7 +186,7 @@ export async function mountSignage(root, options = {}) {
     prefecture,
     content,
     point,
-    map,
+    map: null,
     els,
     data,
     refresh,

@@ -40,12 +40,6 @@
           <option value="3840x2160">3840×2160</option>
         </select>
       </label>
-      <label>地図の見方
-        <select id="map-mode" data-live>
-          <option value="prefecture">都道府県全体</option>
-          <option value="station">観測地点中心</option>
-        </select>
-      </label>
       <label>背景
         <select id="background" data-live>
           <option value="sea">サイネージ青</option>
@@ -59,9 +53,6 @@
       <label>タイトル大きさ <input id="title-size" data-live type="range" min="0.7" max="1.6" step="0.02"></label>
       <label>タイトル左右 <input id="title-x" data-live type="range" min="-80" max="80" step="1"></label>
       <label>タイトル上下 <input id="title-y" data-live type="range" min="-40" max="40" step="1"></label>
-      <label>地図サイズ <input id="map-scale" data-live type="range" min="0.7" max="1.4" step="0.02"></label>
-      <label>地図左右 <input id="map-x" data-live type="range" min="-80" max="80" step="1"></label>
-      <label>地図上下 <input id="map-y" data-live type="range" min="-60" max="60" step="1"></label>
       <label>文字サイズ <input id="font-size" data-live type="range" min="0.8" max="1.4" step="0.02"></label>
       <label>数値サイズ <input id="number-size" data-live type="range" min="0.7" max="1.5" step="0.02"></label>
       <label>パネル左右 <input id="panel-x" data-live type="range" min="-60" max="60" step="1"></label>
@@ -72,7 +63,6 @@
       <label class="check"><input id="show-clock" data-live type="checkbox"> 画面更新</label>
       <label class="check"><input id="show-panel" data-live type="checkbox"> 情報パネル</label>
       <label class="check"><input id="show-attr" data-live type="checkbox"> 出典</label>
-      <label class="check"><input id="show-labels" data-live type="checkbox"> 地図ラベル</label>
 
       <span data-for-content="amedas_temp" class="content-tools">
         <label>気温左右 <input id="temp-x" data-live type="range" min="-80" max="80" step="1"></label>

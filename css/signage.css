@@ -107,22 +107,51 @@ html.is-boot #boot-status { display: flex; }
 .led-screen.is-panel-off .led-body { grid-template-columns: 1fr; }
 .led-screen.is-clock-off .now-clock { display: none; }
 
+.table-stage,
 .map-stage {
   position: relative;
   min-width: 0;
   min-height: 0;
   border-radius: 16px;
   overflow: hidden;
-  background: #6e9bb8;
+  background: #f4f8ff;
   margin-left: var(--map-x, 0px);
   margin-top: var(--map-y, 0px);
 }
 
-.map-canvas,
-.map-canvas .leaflet-container {
+.table-canvas {
   width: 100%;
   height: 100%;
-  background: #6e9bb8;
+  padding: 18px 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.table-kicker {
+  font-size: calc(20px * var(--font-scale, 1));
+  font-weight: 800;
+  color: #2450a8;
+  letter-spacing: 0.08em;
+}
+
+.table-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  min-height: 0;
+  flex: 1;
+}
+
+.table-more {
+  font-size: calc(18px * var(--font-scale, 1));
+  font-weight: 800;
+  color: #2450a8;
+}
+
+.table-canvas .wx-hint {
+  color: #2450a8;
 }
 
 .leaflet-container {
@@ -256,6 +285,50 @@ html.is-boot #boot-status { display: flex; }
 .obs-table tr.is-selected td {
   background: rgba(31, 111, 235, 0.28);
   color: #fff;
+}
+
+.obs-table.is-main {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.obs-table.is-main th,
+.obs-table.is-main td {
+  padding: 11px 16px;
+  font-size: calc(30px * var(--number-scale, 1));
+  color: #0a2f7a;
+  border-bottom: 1px solid #d5deea;
+}
+
+.obs-table.is-main thead th {
+  background: #0a2f7a;
+  color: #d7e7ff;
+  font-size: calc(20px * var(--font-scale, 1));
+}
+
+.obs-table.is-main tbody th {
+  color: #0a2f7a;
+}
+
+.obs-table.is-main tr.is-selected th,
+.obs-table.is-main tr.is-selected td {
+  background: #1f6feb;
+  color: #fff;
+}
+
+.obs-table.is-main .is-miss {
+  color: #b45309;
+}
+
+.obs-table.is-main.is-compact th,
+.obs-table.is-main.is-compact td {
+  padding: 7px 12px;
+  font-size: calc(24px * var(--number-scale, 1));
+}
+
+.obs-table.is-main.is-compact thead th {
+  font-size: calc(16px * var(--font-scale, 1));
 }
 
 .obs-subs {

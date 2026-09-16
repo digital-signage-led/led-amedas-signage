@@ -43,16 +43,12 @@ function setPointId(id) {
 function syncCommonInputs() {
   const c = state.store.common;
   $("resolution").value = c.resolution || "1920x1080";
-  $("map-mode").value = c.mapMode || "prefecture";
   $("background").value = c.background || "sea";
   $("refresh-min").value = c.refreshMinutes || 10;
   $("display-scale").value = c.displayScale ?? 1;
   $("title-size").value = c.titleSize;
   $("title-x").value = c.titleX;
   $("title-y").value = c.titleY;
-  $("map-scale").value = c.mapScale;
-  $("map-x").value = c.mapX;
-  $("map-y").value = c.mapY;
   $("font-size").value = c.fontSize;
   $("number-size").value = c.numberSize ?? 1;
   $("panel-x").value = c.panelX;
@@ -63,22 +59,17 @@ function syncCommonInputs() {
   $("show-clock").checked = c.showClock !== false;
   $("show-panel").checked = c.showPanel !== false;
   $("show-attr").checked = c.showAttribution !== false;
-  $("show-labels").checked = c.showMapLabels !== false;
 }
 
 function readCommonInputs() {
   const c = state.store.common;
   c.resolution = $("resolution").value;
-  c.mapMode = $("map-mode").value;
   c.background = $("background").value;
   c.refreshMinutes = Math.max(10, Number($("refresh-min").value) || 10);
   c.displayScale = Number($("display-scale").value);
   c.titleSize = Number($("title-size").value);
   c.titleX = Number($("title-x").value);
   c.titleY = Number($("title-y").value);
-  c.mapScale = Number($("map-scale").value);
-  c.mapX = Number($("map-x").value);
-  c.mapY = Number($("map-y").value);
   c.fontSize = Number($("font-size").value);
   c.numberSize = Number($("number-size").value);
   c.panelX = Number($("panel-x").value);
@@ -89,7 +80,6 @@ function readCommonInputs() {
   c.showClock = $("show-clock").checked;
   c.showPanel = $("show-panel").checked;
   c.showAttribution = $("show-attr").checked;
-  c.showMapLabels = $("show-labels").checked;
 }
 
 function syncContentInputs() {
@@ -266,7 +256,7 @@ function bind() {
     el.addEventListener("change", () => {
       readCommonInputs();
       readContentInputs();
-      if (el.id === "resolution" || el.id === "map-mode" || el.id === "background" || el.id === "show-labels") {
+      if (el.id === "resolution" || el.id === "background" || el.id === "temp-unit" || el.id === "rain-unit" || el.id === "wind-unit") {
         renderPreview();
       } else {
         applyLivePreview();

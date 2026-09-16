@@ -1,11 +1,10 @@
 import { formatTemp } from "../services/amedas.js";
-import { obsTable, stationCaption, stationRows, tableCell, timesBlock } from "./shared-ui.js";
+import { stationCaption, timesBlock } from "./shared-ui.js";
 
 export function renderTemperature(ctx, data) {
   const settings = ctx.contentSettings || {};
   const selected = data.selected;
-  const obs = selected.obs;
-  const value = formatTemp(obs.temp);
+  const value = formatTemp(selected.obs.temp);
   const unit = settings.showUnit === false ? "" : "℃";
 
   ctx.els.panel.innerHTML = `
@@ -14,10 +13,6 @@ export function renderTemperature(ctx, data) {
     <div class="obs-main" style="transform:translate(var(--value-x), var(--value-y))">
       ${value == null ? `<div class="obs-missing"><span>気温</span><strong>観測データなし</strong></div>` : `<div class="obs-value is-temp">${value}${unit ? `<small>${unit}</small>` : ""}</div>`}
     </div>
-    ${obsTable(
-      ["地点", `気温${unit ? `（${unit}）` : ""}`],
-      stationRows(data, (row) => [tableCell(row.obs.temp, formatTemp)])
-    )}
     ${timesBlock({
       dataUpdatedAt: data.reportAt,
       displayUpdatedAt: data.fetchedAt,
