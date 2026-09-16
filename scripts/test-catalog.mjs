@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { CONTENTS, canonicalContent } from "../js/data/contents.js";
 import { AMEDAS_STATIONS, AMEDAS_STATION_META } from "../js/data/amedas-stations.js";
+import { extrema, tempTone } from "../js/contents/shared-ui.js";
 import { defaultPoint, pointsForPrefecture, tableStations } from "../js/data/observation-points.js";
 import { PREFECTURES, canonicalPrefecture, getPrefecture, prefectureFromAmedasId, regionOf } from "../js/data/prefectures.js";
 import { windDirectionInfo } from "../js/services/amedas.js";
@@ -56,5 +57,16 @@ assert.ok(toyamaTable.points.some((p) => p.id === defaultPoint("toyama").id));
 const hokkaidoTable = tableStations("hokkaido", defaultPoint("hokkaido", "amedas_temp"), "amedas_temp", 36);
 assert.equal(hokkaidoTable.points.length, 36);
 assert.ok(hokkaidoTable.hidden > 0);
+
+assert.equal(tempTone(-1), "t-sub");
+assert.equal(tempTone(23.8), "t20");
+assert.equal(tempTone(31), "t30");
+const ext = extrema([
+  { station: { id: "1", name: "A" }, obs: { temp: 20 } },
+  { station: { id: "2", name: "B" }, obs: { temp: 24 } },
+  { station: { id: "3", name: "C" }, obs: { temp: null } }
+], (row) => row.obs.temp);
+assert.equal(ext.max.name, "B");
+assert.equal(ext.min.name, "A");
 
 console.log(`catalog ok: 47 prefectures, 3 contents, 141 URLs, ${AMEDAS_STATIONS.length} official stations`);

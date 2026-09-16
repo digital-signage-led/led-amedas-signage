@@ -1,5 +1,5 @@
 import { formatMm } from "../services/amedas.js";
-import { obsTable, stationCaption, tableCell, timesBlock } from "./shared-ui.js";
+import { extrema, obsTable, rangeBlock, stationCaption, tableCell, timesBlock } from "./shared-ui.js";
 
 export function renderPrecipitation(ctx, data) {
   const settings = ctx.contentSettings || {};
@@ -7,6 +7,7 @@ export function renderPrecipitation(ctx, data) {
   const obs = selected.obs;
   const unit = settings.showUnit === false ? "" : "mm";
   const unitCell = (value) => tableCell(value, formatMm, unit ? ` <small>${unit}</small>` : "");
+  const ext = extrema(data.stations, (row) => row.obs.precipitation24h);
 
   ctx.els.panel.innerHTML = `
     <div class="panel-kicker">アメダス降水量</div>
@@ -20,6 +21,7 @@ export function renderPrecipitation(ctx, data) {
         { selected: false, cells: ["24時間", unitCell(obs.precipitation24h)] }
       ]
     )}
+    ${rangeBlock(ext, formatMm, unit, { high: "県内最多（24時間）", low: "" })}
     ${timesBlock({
       dataUpdatedAt: data.reportAt,
       displayUpdatedAt: data.fetchedAt,

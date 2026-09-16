@@ -343,6 +343,88 @@ html.is-boot #boot-status { display: flex; }
   height: 42px;
 }
 
+.val-chip {
+  display: inline-block;
+  min-width: 2.4em;
+  padding: 2px 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.val-chip.t-sub { background: #7e57c2; color: #fff; }
+.val-chip.t0 { background: #1e88e5; color: #fff; }
+.val-chip.t5 { background: #29b6f6; color: #07344a; }
+.val-chip.t10 { background: #80deea; color: #08323a; }
+.val-chip.t15 { background: #dce775; color: #3a3d00; }
+.val-chip.t20 { background: #ffe082; color: #5a3d00; }
+.val-chip.t25 { background: #ffb74d; color: #4a2800; }
+.val-chip.t30 { background: #ef5350; color: #fff; }
+.val-chip.t35 { background: #b71c1c; color: #fff; }
+
+.val-chip.r0 { background: #eef2f6; color: #5b6b80; }
+.val-chip.r01 { background: #bbdefb; color: #0d47a1; }
+.val-chip.r1 { background: #64b5f6; color: #06284a; }
+.val-chip.r5 { background: #1e88e5; color: #fff; }
+.val-chip.r10 { background: #ffee58; color: #4a3d00; }
+.val-chip.r20 { background: #ff9800; color: #3a2200; }
+.val-chip.r30 { background: #e53935; color: #fff; }
+
+.val-chip.w0 { background: #eef2f6; color: #5b6b80; }
+.val-chip.w5 { background: #90caf9; color: #0d47a1; }
+.val-chip.w10 { background: #ffb74d; color: #4a2800; }
+.val-chip.w15 { background: #ef5350; color: #fff; }
+
+.row-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.48em;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  color: #fff;
+}
+.row-tag.is-max { background: #c62828; }
+.row-tag.is-min { background: #1565c0; }
+
+.obs-table.is-main tr.is-selected .row-tag.is-max { background: #ffd54f; color: #7a3a00; }
+.obs-table.is-main tr.is-selected .row-tag.is-min { background: #b3e5fc; color: #0d47a1; }
+
+.obs-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.obs-range:has(> :only-child) {
+  grid-template-columns: 1fr;
+}
+.obs-range div {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--panel-line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.obs-range span {
+  display: block;
+  color: #9fb6d8;
+  font-size: calc(16px * var(--font-scale, 1));
+  font-weight: 700;
+}
+.obs-range strong {
+  display: block;
+  font-size: calc(32px * var(--font-scale, 1));
+  font-weight: 900;
+  line-height: 1.1;
+}
+.obs-range em {
+  font-style: normal;
+  color: #c5d7f2;
+  font-size: calc(20px * var(--font-scale, 1));
+  font-weight: 800;
+}
+
 .obs-subs {
   display: grid;
   grid-template-columns: 1fr 1fr;

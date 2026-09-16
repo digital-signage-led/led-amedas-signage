@@ -1,5 +1,5 @@
 import { formatWindMs } from "../services/amedas.js";
-import { stationCaption, timesBlock } from "./shared-ui.js";
+import { extrema, rangeBlock, stationCaption, timesBlock } from "./shared-ui.js";
 
 function arrowSvg(deg) {
   return `
@@ -19,6 +19,7 @@ export function renderWind(ctx, data) {
   const unit = settings.showUnit === false ? "" : "m/s";
   const dirText = wind.calm ? "静穏" : wind.label;
   const phrase = wind.calm ? "風はほとんどありません" : (dirText ? `${dirText}の風` : null);
+  const ext = extrema(data.stations, (row) => row.obs.wind);
 
   ctx.els.panel.innerHTML = `
     <div class="panel-kicker">アメダス風向・風速</div>
@@ -39,6 +40,7 @@ export function renderWind(ctx, data) {
         <div class="obs-value-label">風速</div>
       </div>
     </div>
+    ${rangeBlock(ext, formatWindMs, unit, { high: "県内最強", low: "" })}
     ${timesBlock({
       dataUpdatedAt: data.reportAt,
       displayUpdatedAt: data.fetchedAt,

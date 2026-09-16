@@ -56,6 +56,12 @@ export function buildScreen(root) {
   };
 }
 
+function tableKicker(contentId) {
+  if (contentId === "amedas_temp") return "県内の気温";
+  if (contentId === "amedas_precip") return "県内の降水量";
+  return "県内の風向・風速";
+}
+
 function applyVisibility(els, common) {
   els.stamp.hidden = common.showStamp === false;
   els.point.hidden = common.showPoint === false;
@@ -68,7 +74,7 @@ function applyVisibility(els, common) {
 function applyTable(els, data, contentId, showUnit, hidden = 0) {
   if (!els.tableCanvas) return;
   els.tableCanvas.innerHTML = `
-    <div class="table-kicker">県内の観測地点</div>
+    <div class="table-kicker">${tableKicker(contentId)}</div>
     ${mainStationTable(contentId, data, showUnit)}
     ${hidden > 0 ? `<div class="table-more">ほか ${hidden} 地点</div>` : ""}
   `;
@@ -122,7 +128,7 @@ export async function mountSignage(root, options = {}) {
   els.stamp.textContent = "データ取得中";
   els.point.textContent = point ? `観測地点 ${point.name}` : "";
   els.attr.textContent = TABLE_ATTRIBUTION;
-  els.tableCanvas.innerHTML = `<div class="table-kicker">県内の観測地点</div><p class="wx-hint">データ取得中</p>`;
+  els.tableCanvas.innerHTML = `<div class="table-kicker">${tableKicker(content.id)}</div><p class="wx-hint">データ取得中</p>`;
   els.panel.innerHTML = `
     <div class="panel-kicker">${content.name}</div>
     <div class="panel-area">${prefecture.name}${point ? `／${point.name}` : ""}</div>
