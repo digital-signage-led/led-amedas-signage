@@ -1,10 +1,11 @@
 import { renderPrecipitation } from "./contents/precipitation.js";
-import { mainStationTable } from "./contents/shared-ui.js";
+import { mapLabelFor, mapMarkerRows } from "./contents/shared-ui.js";
 import { renderTemperature } from "./contents/temperature.js";
 import { renderWind } from "./contents/wind.js";
 import { getContent } from "./data/contents.js";
 import { defaultPoint, getPoint, tableStations } from "./data/observation-points.js";
-import { getPrefecture, regionOf } from "./data/prefectures.js";
+import { getPrefecture, isJapan, regionOf } from "./data/prefectures.js";
+import { createMap, MAP_ATTRIBUTION } from "./map/map-engine.js";
 import { fetchAmedasBundle, windDirectionInfo } from "./services/amedas.js";
 import { formatStamp, nextAmedasRefreshDelay } from "./services/jma-common.js";
 import { settingsForSignage } from "./store.js";
@@ -16,7 +17,6 @@ const RENDERERS = {
   amedas_wind: renderWind
 };
 
-const TABLE_ATTRIBUTION = "アメダス観測 © 気象庁";
 const CYCLE_MS = 7000;
 
 function screenHtml() {
@@ -32,8 +32,10 @@ function screenHtml() {
         </div>
       </header>
       <div class="led-body">
-        <div class="table-stage">
-          <div class="table-canvas"></div>
+        <div class="map-stage">
+          <div class="cycle-bar" aria-hidden="true"><i></i></div>
+          <div class="map-canvas"></div>
+          <div class="okinawa-dock" hidden></div>
         </div>
         <aside class="info-panel"></aside>
       </div>
@@ -52,15 +54,11 @@ export function buildScreen(root) {
     stamp: screen.querySelector(".led-stamp"),
     point: screen.querySelector(".led-point"),
     panel: screen.querySelector(".info-panel"),
-    tableCanvas: screen.querySelector(".table-canvas"),
+    mapCanvas: screen.querySelector(".map-canvas"),
+    cycleBar: screen.querySelector(".cycle-bar > i"),
+    okinawaDock: screen.querySelector(".okinawa-dock"),
     attr: screen.querySelector(".map-attribution")
   };
-}
-
-function tableKicker(contentId) {
-  if (contentId === "amedas_temp") return "県内の気温";
-  if (contentId === "amedas_precip") return "県内の降水量";
-  return "県内の風向・風速";
 }
 
 function applyVisibility(els, common) {
@@ -72,18 +70,8 @@ function applyVisibility(els, common) {
   els.screen.classList.toggle("is-clock-off", common.showClock === false);
 }
 
-function applyTable(els, data, contentId, showUnit, hidden = 0) {
-  if (!els.tableCanvas) return;
-  els.tableCanvas.innerHTML = `
-    <div class="table-kicker">${tableKicker(contentId)}</div>
-    <div class="cycle-bar" aria-hidden="true"><i></i></div>
-    ${mainStationTable(contentId, data, showUnit)}
-    ${hidden > 0 ? `<div class="table-more">ほか ${hidden} 地点</div>` : ""}
-  `;
-}
-
 function restartCycleBar(els) {
-  const bar = els.tableCanvas?.querySelector(".cycle-bar > i");
+  const bar = els.cycleBar;
   if (!bar) return;
   bar.style.animation = "none";
   void bar.offsetWidth;
@@ -129,11 +117,19 @@ function collectEls(root) {
       stamp: root.querySelector(".led-stamp"),
       point: root.querySelector(".led-point"),
       panel: root.querySelector(".info-panel"),
-      tableCanvas: root.querySelector(".table-canvas"),
+      mapCanvas: root.querySelector(".map-canvas"),
+      cycleBar: root.querySelector(".cycle-bar > i"),
+      okinawaDock: root.querySelector(".okinawa-dock"),
       attr: root.querySelector(".map-attribution")
     };
   }
   return buildScreen(root);
+}
+
+function pointCaption(national, station) {
+  if (!station) return "";
+  if (national) return `${station.prefName || ""} ${station.name}`.trim();
+  return `観測地点 ${station.name}`;
 }
 
 export async function mountSignage(root, options = {}) {
@@ -145,17 +141,18 @@ export async function mountSignage(root, options = {}) {
   const contentSettings = published.content || published.contents?.[content.id] || {};
   const design = designSize(common.resolution);
   const els = collectEls(root);
+  const national = isJapan(prefecture.slug);
 
   els.screen.dataset.prefecture = prefecture.slug;
   els.screen.dataset.content = content.id;
+  els.screen.classList.toggle("is-national", national);
   els.title.textContent = `${prefecture.name}｜${content.name}`;
   els.stamp.textContent = "データ取得中";
-  els.point.textContent = point ? `観測地点 ${point.name}` : "";
-  els.attr.textContent = TABLE_ATTRIBUTION;
-  els.tableCanvas.innerHTML = `<div class="table-kicker">${tableKicker(content.id)}</div><p class="wx-hint">データ取得中</p>`;
+  els.point.textContent = pointCaption(national, point);
+  els.attr.textContent = MAP_ATTRIBUTION;
   els.panel.innerHTML = `
     <div class="panel-kicker">${content.name}</div>
-    <div class="panel-area">${prefecture.name}${point ? `／${point.name}` : ""}</div>
+    <div class="panel-area">${prefecture.name}${point ? `／${point.prefName || point.name}` : ""}</div>
     <p class="wx-hint">${content.description}</p>
     <div class="time-grid"><div><span class="k">対象地域</span><strong>${regionOf(prefecture.slug).name} ${prefecture.name}</strong></div></div>
   `;
@@ -175,27 +172,57 @@ export async function mountSignage(root, options = {}) {
     cleanups.push(() => ro.disconnect());
   }
 
-  const tableSet = tableStations(prefecture.slug, point, content.id, 36);
+  const mapLimit = national ? 47 : 28;
+  const tableSet = tableStations(prefecture.slug, point, content.id, mapLimit);
   const nearby = tableSet.points;
   let latest = null;
+  let mapApi = null;
   let focusIndex = Math.max(0, nearby.findIndex((item) => item.id === point.id));
   const render = RENDERERS[content.id] || renderTemperature;
+
+  async function ensureMap() {
+    if (mapApi || !els.mapCanvas) return mapApi;
+    mapApi = await createMap(els.mapCanvas, {
+      prefecture,
+      point,
+      interactive: false,
+      mapMode: common.mapMode || "prefecture"
+    });
+    return mapApi;
+  }
 
   function paint(animate) {
     if (!latest) return;
     const row = latest.stations?.[focusIndex] || latest.stations?.[0];
     if (!row) return;
     focusBundle(latest, row.station.id);
-    els.tableCanvas.querySelectorAll("tr[data-station]").forEach((tr) => {
-      tr.classList.toggle("is-selected", tr.dataset.station === row.station.id);
-    });
-    els.point.textContent = `観測地点 ${row.station.name}`;
+    els.point.textContent = pointCaption(national, row.station);
     if (animate) {
       els.panel.classList.remove("is-swap");
       void els.panel.offsetWidth;
       els.panel.classList.add("is-swap");
     }
     render({ prefecture, content, point: row.station, common, contentSettings, els }, latest);
+    if (mapApi) {
+      if (national) {
+        const focus = getPrefecture(row.station.prefecture || row.station.prefSlug);
+        mapApi.setFocusPref(focus.id);
+      }
+      const markers = mapMarkerRows(content.id, latest, { national }).filter((item) => {
+        if (!national) return true;
+        return item.station.prefecture !== "okinawa" && item.station.prefSlug !== "okinawa";
+      });
+      mapApi.setStations(markers, { showLabels: common.showMapLabels !== false });
+    }
+    if (els.okinawaDock) {
+      const oki = (latest.stations || []).find((item) => item.station.prefecture === "okinawa" || item.station.prefSlug === "okinawa");
+      els.okinawaDock.hidden = !national || !oki;
+      if (national && oki) {
+        const wind = windDirectionInfo(oki.obs.windDirection);
+        els.okinawaDock.classList.toggle("is-selected", !!oki.selected);
+        els.okinawaDock.innerHTML = `<em>沖縄県</em><strong>${mapLabelFor(content.id, oki.obs, wind) || "観測データなし"}</strong>`;
+      }
+    }
     restartCycleBar(els);
   }
 
@@ -224,7 +251,8 @@ export async function mountSignage(root, options = {}) {
       focusIndex = Math.min(focusIndex, latest.stations.length - 1);
     }
     try {
-      applyTable(els, latest, content.id, contentSettings.showUnit !== false, tableSet.hidden);
+      await ensureMap();
+      mapApi?.invalidate?.();
       paint(false);
     } catch {
       els.panel.insertAdjacentHTML("beforeend", `<div class="data-error">表示処理で問題が起きました</div>`);
@@ -253,11 +281,12 @@ export async function mountSignage(root, options = {}) {
     prefecture,
     content,
     point,
-    map: null,
+    map: mapApi,
     els,
     data,
     refresh,
     destroy() {
+      try { mapApi?.destroy?.(); } catch { /* ignore */ }
       cleanups.forEach((fn) => {
         try { fn(); } catch { /* ignore */ }
       });

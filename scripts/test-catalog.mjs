@@ -3,7 +3,7 @@ import { CONTENTS, canonicalContent } from "../js/data/contents.js";
 import { AMEDAS_STATIONS, AMEDAS_STATION_META } from "../js/data/amedas-stations.js";
 import { extrema, tempTone } from "../js/contents/shared-ui.js";
 import { defaultPoint, pointsForPrefecture, tableStations } from "../js/data/observation-points.js";
-import { PREFECTURES, canonicalPrefecture, getPrefecture, prefectureFromAmedasId, regionOf } from "../js/data/prefectures.js";
+import { PREFECTURES, SIGNAGE_AREAS, canonicalPrefecture, getPrefecture, prefectureFromAmedasId, regionOf } from "../js/data/prefectures.js";
 import { windDirectionInfo } from "../js/services/amedas.js";
 
 assert.equal(PREFECTURES.length, 47);
@@ -30,6 +30,11 @@ assert.equal(canonicalContent("temp"), "amedas_temp");
 assert.equal(canonicalContent("precipitation"), "amedas_precip");
 assert.equal(canonicalContent("wind"), "amedas_wind");
 assert.equal(PREFECTURES.length * CONTENTS.length, 141);
+assert.equal(SIGNAGE_AREAS.length * CONTENTS.length, 144);
+assert.equal(getPrefecture("japan").slug, "japan");
+assert.equal(canonicalPrefecture("national"), "japan");
+assert.equal(pointsForPrefecture("japan", "amedas_temp").length, 47);
+assert.equal(defaultPoint("japan", "amedas_temp").prefName, "北海道");
 
 const tokyo = defaultPoint("tokyo");
 assert.equal(tokyo.id, "44132");
@@ -69,4 +74,4 @@ const ext = extrema([
 assert.equal(ext.max.name, "B");
 assert.equal(ext.min.name, "A");
 
-console.log(`catalog ok: 47 prefectures, 3 contents, 141 URLs, ${AMEDAS_STATIONS.length} official stations`);
+console.log(`catalog ok: 47 prefectures + japan, 3 contents, 144 URLs, ${AMEDAS_STATIONS.length} official stations`);

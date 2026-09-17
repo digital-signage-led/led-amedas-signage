@@ -3,6 +3,20 @@
  * region は管理画面の内部判定用。選択UIには出さない。
  */
 
+export const JAPAN = {
+  id: "00",
+  slug: "japan",
+  name: "全国",
+  region: "japan",
+  regionName: "全国",
+  national: true,
+  centerLatitude: 37.15,
+  centerLongitude: 137.35,
+  defaultZoom: 5.7,
+  dataId: "000000",
+  bounds: { north: 45.55, south: 30.95, east: 145.90, west: 128.55 }
+};
+
 export const PREFECTURES = [
   { id: "01", slug: "hokkaido", name: "北海道", region: "hokkaido", regionName: "北海道", centerLatitude: 43.45, centerLongitude: 142.85, defaultZoom: 6.5, dataId: "016000", bounds: { north: 45.55, south: 41.35, east: 145.82, west: 139.40 } },
   { id: "02", slug: "aomori", name: "青森県", region: "tohoku", regionName: "東北", centerLatitude: 40.82, centerLongitude: 140.74, defaultZoom: 8.2, dataId: "020000", bounds: { north: 41.56, south: 40.22, east: 141.68, west: 139.50 } },
@@ -53,7 +67,13 @@ export const PREFECTURES = [
   { id: "47", slug: "okinawa", name: "沖縄県", region: "okinawa", regionName: "沖縄", centerLatitude: 26.33, centerLongitude: 127.80, defaultZoom: 8.8, dataId: "471000", bounds: { north: 26.90, south: 26.05, east: 128.35, west: 127.55 } }
 ];
 
+export const SIGNAGE_AREAS = [JAPAN, ...PREFECTURES];
+
 const SLUG_ALIASES = {
+  japan: "japan",
+  national: "japan",
+  zenkoku: "japan",
+  "00": "japan",
   hokkaido: "hokkaido",
   aomori: "aomori",
   iwate: "iwate",
@@ -107,7 +127,12 @@ const SLUG_ALIASES = {
 export function getPrefecture(slugOrId) {
   const raw = String(slugOrId || "").toLowerCase();
   const slug = SLUG_ALIASES[raw] || raw;
+  if (slug === "japan" || raw === "全国" || String(slugOrId) === "00") return JAPAN;
   return PREFECTURES.find((item) => item.slug === slug || item.id === String(slugOrId)) || PREFECTURES[12];
+}
+
+export function isJapan(slugOrId) {
+  return getPrefecture(slugOrId).slug === "japan";
 }
 
 export function canonicalPrefecture(slugOrId) {

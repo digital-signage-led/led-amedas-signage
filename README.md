@@ -15,12 +15,13 @@
 共通テンプレートは `index.html` のみです。都道府県とコンテンツはURLパラメータで切り替えます。後からデザインを直しても、このURLは変えません。
 
 ```
+index.html?prefecture=japan&content=amedas_temp
 index.html?prefecture=tokyo&content=amedas_temp
 index.html?prefecture=tokyo&content=amedas_precip
 index.html?prefecture=tokyo&content=amedas_wind
 ```
 
-141通り（47 × 3）を同じ画面で表示します。観測地点は管理画面の公開設定、または `point=` で指定します。
+144通り（全国 + 47都道府県 × 3）を同じ画面で表示します。県画面は県内地点、全国画面は県ごとの代表地点を地図と右ボックスで出します。
 
 ## 管理画面
 
@@ -40,7 +41,8 @@ index.html?prefecture=tokyo&content=amedas_wind
 - 全国スナップショット：`/bosai/amedas/data/map/{yyyymmddHHMM00}.json`
 - 更新：10分ごと（気象庁の10分値＋約90秒遅れ）。これより短い間隔では取りに行きません
 - 欠測：0℃ / 0mm / 0m/s に置き換えず、「観測データなし」「更新待ち」を表示
-- 表示：県内観測地点の表。地図上には数値を置かない
+- 表示：県境の白地図＋数値ボックス。右パネルにも同じ値を出す
+- 全国：`prefecture=japan`。47都道府県の代表地点を県ごとに表示
 
 風向コードは気象庁の16方位（0=静穏、1=北北東 … 16=北）です。矢印は風が吹いていく方向を指します。
 

@@ -1,6 +1,6 @@
 import { CONTENTS } from "./data/contents.js";
 import { comboKey, defaultPoint, pointsForPrefecture } from "./data/observation-points.js";
-import { PREFECTURES } from "./data/prefectures.js";
+import { SIGNAGE_AREAS } from "./data/prefectures.js";
 import { mountSignage } from "./signage-view.js";
 import {
   allCombos,
@@ -199,7 +199,7 @@ function renderUrls() {
     if (qStatus && row.status !== qStatus) return false;
     return true;
   });
-  $("url-count").textContent = `${rows.length} / 141`;
+  $("url-count").textContent = `${rows.length} / 144`;
   $("url-table").innerHTML = rows.map((row) => {
     const url = publicHref(row.prefecture.slug, row.content.id);
     return `<tr>
@@ -221,7 +221,7 @@ function toast(message) {
 }
 
 function bind() {
-  fillSelect($("pref-select"), PREFECTURES, (p) => p.slug, (p) => p.name, state.prefecture);
+  fillSelect($("pref-select"), SIGNAGE_AREAS, (p) => p.slug, (p) => p.name, state.prefecture);
   fillSelect($("content-select"), CONTENTS, (c) => c.id, (c) => c.name, state.content);
   fillSelect($("url-content"), [{ id: "", name: "すべてのコンテンツ" }, ...CONTENTS], (c) => c.id, (c) => c.name, "");
   fillPoints();
@@ -288,7 +288,7 @@ function bind() {
     statusLabel();
     renderUrls();
     await persistPublishedFile(state.store);
-    toast("141件を公開設定に反映しました");
+    toast("144件を公開設定に反映しました");
   });
   $("btn-open").addEventListener("click", () => {
     window.open(publicHref(state.prefecture, state.content), "_blank");

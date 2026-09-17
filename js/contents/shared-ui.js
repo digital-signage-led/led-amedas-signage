@@ -209,3 +209,41 @@ export function mainStationTable(contentId, data, showUnit = true) {
     )
   );
 }
+
+export function mapLabelFor(contentId, obs, wind) {
+  if (contentId === "amedas_temp") {
+    return obs.temp == null ? "" : Number(obs.temp).toFixed(1);
+  }
+  if (contentId === "amedas_precip") {
+    const value = obs.precipitation1h ?? obs.precipitation10m ?? obs.precipitation24h;
+    return value == null ? "" : Number(value).toFixed(1);
+  }
+  if (contentId === "amedas_wind") {
+    if (obs.wind == null && !wind?.label) return "";
+    const dir = wind?.calm ? "静穏" : (wind?.label || "");
+    const spd = obs.wind == null ? "" : Number(obs.wind).toFixed(1);
+    return [dir, spd].filter(Boolean).join(" ");
+  }
+  return "";
+}
+
+export function markerKind(contentId, obs) {
+  if (contentId === "amedas_temp") return tempTone(obs.temp);
+  if (contentId === "amedas_precip") return rainTone(obs.precipitation1h ?? obs.precipitation24h ?? obs.precipitation10m);
+  return windTone(obs.wind);
+}
+
+export function mapMarkerRows(contentId, data, { national = false } = {}) {
+  return (data.stations || []).map((row) => {
+    const wind = windDirectionInfo(row.obs.windDirection);
+    return {
+      station: row.station,
+      selected: !!row.selected,
+      label: mapLabelFor(contentId, row.obs, wind),
+      name: national ? (row.station.prefName || row.station.name) : row.station.name,
+      showName: !!row.selected,
+      kind: markerKind(contentId, row.obs),
+      arrowDeg: contentId === "amedas_wind" && !wind.calm ? wind.toDeg : null
+    };
+  });
+}

@@ -4,6 +4,7 @@
  */
 import { AMEDAS_STATIONS, AMEDAS_STATION_META } from "./amedas-stations.js";
 import { getContent } from "./contents.js";
+import { PREFECTURES } from "./prefectures.js";
 
 export const OBSERVATION_POINTS = AMEDAS_STATIONS;
 export const STATION_META = AMEDAS_STATION_META;
@@ -16,7 +17,7 @@ export function hasContentElement(point, contentId) {
   return true;
 }
 
-export function pointsForPrefecture(slug, contentId) {
+function prefecturePoints(slug, contentId) {
   return OBSERVATION_POINTS
     .filter((item) => item.prefecture === slug)
     .filter((item) => !contentId || hasContentElement(item, contentId))
@@ -28,6 +29,17 @@ export function pointsForPrefecture(slug, contentId) {
       if (rd) return rd;
       return a.name.localeCompare(b.name, "ja");
     });
+}
+
+export function pointsForPrefecture(slug, contentId) {
+  if (slug === "japan") {
+    return PREFECTURES.map((pref) => {
+      const list = prefecturePoints(pref.slug, contentId);
+      const point = list.find((item) => item.default) || list[0];
+      return point ? { ...point, prefName: pref.name, prefSlug: pref.slug } : null;
+    }).filter(Boolean);
+  }
+  return prefecturePoints(slug, contentId);
 }
 
 export function getPoint(id, prefectureSlug, contentId) {

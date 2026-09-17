@@ -4,7 +4,7 @@
  */
 import { CONTENTS } from "./data/contents.js";
 import { comboKey, defaultPoint } from "./data/observation-points.js";
-import { PREFECTURES } from "./data/prefectures.js";
+import { SIGNAGE_AREAS } from "./data/prefectures.js";
 
 export const DRAFT_KEY = "amedas-obs-draft-v1";
 export const PUBLISHED_KEY = "amedas-obs-published-v1";
@@ -71,7 +71,7 @@ export function defaultContentSettings() {
 export function emptyStore() {
   const points = {};
   const status = {};
-  for (const pref of PREFECTURES) {
+  for (const pref of SIGNAGE_AREAS) {
     const point = defaultPoint(pref.slug);
     for (const content of CONTENTS) {
       const key = comboKey(pref.slug, content.id);
@@ -197,7 +197,7 @@ export function allCombos() {
   const published = loadPublished();
   const draft = loadDraft();
   const rows = [];
-  for (const pref of PREFECTURES) {
+  for (const pref of SIGNAGE_AREAS) {
     for (const content of CONTENTS) {
       const key = comboKey(pref.slug, content.id);
       rows.push({

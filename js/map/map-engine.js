@@ -117,6 +117,15 @@ function prefLatLngBounds(L, pref) {
 }
 
 function applyPrefView(map, L, pref, point, mapMode) {
+  if (pref?.national || pref?.slug === "japan") {
+    const bounds = prefLatLngBounds(L, pref);
+    if (bounds) {
+      map.fitBounds(bounds, { padding: [12, 12], maxZoom: 6.3, animate: false });
+      return;
+    }
+    map.setView([pref.centerLatitude, pref.centerLongitude], pref.defaultZoom || 5.25, { animate: false });
+    return;
+  }
   if (mapMode === "station" && point) {
     map.setView([point.latitude, point.longitude], Math.min(prefMaxZoom(pref), Math.max(9.2, (pref.defaultZoom || 8) + 1.2)), { animate: false });
     return;
@@ -165,6 +174,7 @@ export async function createMap(container, { prefecture, point, interactive = fa
   let currentPref = prefecture;
   let currentPoint = point;
   let currentMode = mapMode;
+  let focusPrefId = prefecture?.national ? "" : prefecture?.id;
   const map = L.map(container, {
     zoomControl: false,
     attributionControl: false,
@@ -174,7 +184,7 @@ export async function createMap(container, { prefecture, point, interactive = fa
     boxZoom: false,
     keyboard: false,
     tap: false,
-    minZoom: 5,
+    minZoom: 4.5,
     maxZoom: 10.5,
     zoomSnap: 0.25,
     zoomDelta: 0.25,
@@ -192,7 +202,7 @@ export async function createMap(container, { prefecture, point, interactive = fa
   let fillLayer = null;
   let strokeLayer = null;
   const paintPrefs = () => {
-    const currentId = currentPref?.id;
+    const currentId = focusPrefId || (currentPref?.national ? "" : currentPref?.id);
     if (fillLayer) fillLayer.setStyle((feature) => fillStyle(feature, currentId));
     if (strokeLayer) {
       strokeLayer.setStyle((feature) => strokeStyle(feature, currentId));
@@ -230,9 +240,14 @@ export async function createMap(container, { prefecture, point, interactive = fa
       currentPref = nextPref;
       currentPoint = nextPoint;
       currentMode = nextMode;
+      if (!nextPref?.national) focusPrefId = nextPref?.id || "";
       paintPrefs();
       applyPrefView(map, L, nextPref, nextPoint, nextMode);
       refresh();
+    },
+    setFocusPref(prefId) {
+      focusPrefId = prefId || "";
+      paintPrefs();
     },
     setStations(rows = [], { showLabels = true } = {}) {
       stationLayer.clearLayers();
@@ -241,12 +256,14 @@ export async function createMap(container, { prefecture, point, interactive = fa
         if (!station) continue;
         const selected = !!row.selected;
         const label = showLabels ? escapeHtml(row.label || "") : "";
+        const name = escapeHtml(row.name || station.prefName || station.name || "");
+        const showName = row.showName || selected;
         const html = `
           <div class="amedas-pin ${selected ? "is-selected" : ""} ${row.kind || ""}">
             <i class="amedas-dot"></i>
             ${row.arrowDeg != null ? `<span class="amedas-mini-arrow" style="transform:rotate(${row.arrowDeg}deg)"></span>` : ""}
-            ${label ? `<strong>${label}</strong>` : ""}
-            ${selected ? `<em>${escapeHtml(station.name)}</em>` : ""}
+            ${label ? `<strong class="amedas-box">${label}</strong>` : ""}
+            ${showName && name ? `<em>${name}</em>` : ""}
           </div>
         `;
         const icon = L.divIcon({
