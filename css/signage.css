@@ -89,10 +89,14 @@ html.is-boot #boot-status { display: flex; }
   white-space: nowrap;
 }
 
-.led-stamp,
-.led-point {
+.led-stamp {
   font-size: calc(36px * var(--font-scale, 1));
   font-weight: 700;
+}
+
+.led-point {
+  font-size: calc(44px * var(--font-scale, 1));
+  font-weight: 800;
 }
 
 .led-body {
@@ -150,7 +154,7 @@ html.is-boot #boot-status { display: flex; }
 .okinawa-dock em {
   display: block;
   font-style: normal;
-  font-size: 14px;
+  font-size: 22px;
   font-weight: 800;
 }
 .okinawa-dock strong {
@@ -286,15 +290,15 @@ html.is-boot #boot-status { display: flex; }
 
 .panel-area,
 .obs-station {
-  font-size: calc(44px * var(--font-scale, 1));
+  font-size: calc(68px * var(--font-scale, 1));
   font-weight: 900;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
 .obs-station small {
   display: block;
   margin-top: 4px;
-  font-size: calc(20px * var(--font-scale, 1));
+  font-size: calc(22px * var(--font-scale, 1));
   color: #9fb6d8;
   font-weight: 700;
 }
@@ -696,12 +700,12 @@ html.is-boot #boot-status { display: flex; }
 }
 .amedas-pin em {
   font-style: normal;
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 800;
   color: #0a2f7a;
   background: rgba(255,255,255,0.92);
-  padding: 1px 7px;
-  border-radius: 7px;
+  padding: 2px 8px;
+  border-radius: 8px;
   box-shadow: 0 1px 4px rgba(10, 47, 122, 0.12);
 }
 .led-screen.is-national .amedas-pin strong { font-size: 15px; padding: 2px 6px; }

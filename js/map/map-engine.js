@@ -262,6 +262,7 @@ export async function createMap(container, { prefecture, point, interactive = fa
         const html = `
           <div class="amedas-pin ${selected ? "is-selected" : ""} ${row.kind || ""}">
             ${label ? `<strong class="amedas-box">${label}</strong>` : ""}
+            ${showName && name ? `<em>${name}</em>` : ""}
             ${row.arrowDeg != null ? `<span class="amedas-mini-arrow" style="transform:rotate(${row.arrowDeg}deg)"></span>` : ""}
             <i class="amedas-dot"></i>
           </div>
