@@ -93,7 +93,7 @@ function isRemotePoint(pref, point) {
 }
 
 function prefMaxZoom(pref) {
-  return Math.min(10.5, 8.5 + (Number(pref?.zoomBoost) || 0));
+  return Math.min(11.4, (Number(pref?.defaultZoom) || 8.5) + 1.6 + (Number(pref?.zoomBoost) || 0));
 }
 
 function zoomForPoint(pref, point) {
@@ -137,7 +137,8 @@ function applyPrefView(map, L, pref, point, mapMode) {
   const bounds = prefLatLngBounds(L, pref);
   if (bounds) {
     map.fitBounds(bounds, {
-      padding: [28, 28],
+      paddingTopLeft: [22, 96],
+      paddingBottomRight: [22, 28],
       maxZoom: prefMaxZoom(pref),
       animate: false
     });
@@ -185,7 +186,7 @@ export async function createMap(container, { prefecture, point, interactive = fa
     keyboard: false,
     tap: false,
     minZoom: 4.5,
-    maxZoom: 10.5,
+    maxZoom: 11.5,
     zoomSnap: 0.25,
     zoomDelta: 0.25,
     fadeAnimation: false,
@@ -260,10 +261,9 @@ export async function createMap(container, { prefecture, point, interactive = fa
         const showName = row.showName || selected;
         const html = `
           <div class="amedas-pin ${selected ? "is-selected" : ""} ${row.kind || ""}">
-            <i class="amedas-dot"></i>
-            ${row.arrowDeg != null ? `<span class="amedas-mini-arrow" style="transform:rotate(${row.arrowDeg}deg)"></span>` : ""}
             ${label ? `<strong class="amedas-box">${label}</strong>` : ""}
-            ${showName && name ? `<em>${name}</em>` : ""}
+            ${row.arrowDeg != null ? `<span class="amedas-mini-arrow" style="transform:rotate(${row.arrowDeg}deg)"></span>` : ""}
+            <i class="amedas-dot"></i>
           </div>
         `;
         const icon = L.divIcon({

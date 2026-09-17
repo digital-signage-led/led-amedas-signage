@@ -241,7 +241,7 @@ export function mapMarkerRows(contentId, data, { national = false } = {}) {
       selected: !!row.selected,
       label: mapLabelFor(contentId, row.obs, wind),
       name: national ? (row.station.prefName || row.station.name) : row.station.name,
-      showName: !!row.selected,
+      showName: false,
       kind: markerKind(contentId, row.obs),
       arrowDeg: contentId === "amedas_wind" && !wind.calm ? wind.toDeg : null
     };

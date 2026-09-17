@@ -639,11 +639,11 @@ html.is-boot #boot-status { display: flex; }
 
 .amedas-marker { background: none !important; border: 0 !important; }
 .amedas-pin {
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, calc(-100% + 7px));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   pointer-events: none;
   white-space: nowrap;
 }
@@ -676,19 +676,23 @@ html.is-boot #boot-status { display: flex; }
 }
 
 .led-screen[data-content="amedas_temp"] .amedas-pin strong {
-  font-size: 28px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  min-width: 2.5em;
+  font-size: 36px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  min-width: 2.6em;
   text-align: center;
 }
 .led-screen[data-content="amedas_temp"] .amedas-pin.is-selected strong {
-  font-size: 36px;
-  padding: 8px 14px;
+  font-size: 48px;
+  padding: 10px 16px;
 }
-.led-screen[data-content="amedas_temp"] .amedas-pin em {
-  font-size: 18px;
-  padding: 2px 8px;
+.led-screen[data-content="amedas_temp"] .amedas-dot {
+  width: 16px;
+  height: 16px;
+}
+.led-screen[data-content="amedas_temp"] .amedas-pin.is-selected .amedas-dot {
+  width: 22px;
+  height: 22px;
 }
 .amedas-pin em {
   font-style: normal;
@@ -704,12 +708,12 @@ html.is-boot #boot-status { display: flex; }
 .led-screen.is-national .amedas-pin em { font-size: 12px; }
 .led-screen.is-national .amedas-pin.is-selected strong { font-size: 20px; }
 .led-screen.is-national[data-content="amedas_temp"] .amedas-pin strong {
-  font-size: 20px;
+  font-size: 22px;
   padding: 4px 9px;
 }
 .led-screen.is-national[data-content="amedas_temp"] .amedas-pin.is-selected strong {
-  font-size: 26px;
-  padding: 5px 11px;
+  font-size: 30px;
+  padding: 6px 12px;
 }
 .led-screen.is-national[data-content="amedas_temp"] .okinawa-dock strong {
   font-size: 34px;
